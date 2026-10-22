@@ -119,6 +119,9 @@ Desktop only. Status: 0.6.2, early.
 - It reads and writes only inside your vault: the bundle folders you enable, and its own state
   (snapshots, audit log, trust snapshot) in its plugin folder. Files reached through symlinks that
   lead outside the vault are not served.
+- It imports Node's `fs` module for one thing only: resolving a file's real path (`realpath`), so
+  that a symlink inside a bundle cannot expose files outside the vault or in its configuration
+  folder. It reads and writes notes only through Obsidian's vault API.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
