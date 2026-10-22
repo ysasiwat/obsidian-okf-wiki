@@ -85,7 +85,7 @@ Here's why:
 - You should decide which knowledge counts as reviewed, not the agent
 - Your notes stay plain Markdown that you can read and edit without the plugin
 
-Desktop only. Status: 0.6.0, early. The design is in [docs/DESIGN.md](docs/DESIGN.md) and the
+Desktop only. Status: 0.6.1, early. The design is in [docs/DESIGN.md](docs/DESIGN.md) and the
 decisions behind it in [docs/adr/](docs/adr/) (both in Thai).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
