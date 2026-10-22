@@ -25,6 +25,12 @@ const options = {
   minify: prod,
   logLevel: "info",
   outfile: "main.js",
+  // The MCP SDK's Node shim pulls in Ajv, which compiles schemas with new Function; its only use
+  // is validating elicitation results and fromJsonSchema, neither of which the plugin calls. The
+  // browser shim swaps in the code-generation-free @cfworker/json-schema validator (its stub
+  // `process` only matters to stdio, which the plugin does not use).
+  // shortcut: points at a file inside the SDK's dist/, so an SDK upgrade that renames it fails the build; update the path then.
+  alias: { "@modelcontextprotocol/server/_shims": "./node_modules/@modelcontextprotocol/server/dist/shimsBrowser.mjs" },
   banner: { js: "/* okf-wiki: bundled by esbuild. Source: https://github.com/ysasiwat/obsidian-okf-wiki */" },
 };
 
