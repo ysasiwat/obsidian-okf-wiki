@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: PyYAML for the cross-implementation test
+        run: python -m pip install pyyaml==6.0.2
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npx vitest run --coverage
+      - run: npm run build:cli
+      - name: Lint the sample bundles with the built CLI
+        run: |
+          node dist/okf.cjs lint test/fixtures/okf-bundles/ga4
+          node dist/okf.cjs lint test/fixtures/okf-bundles/crypto_bitcoin

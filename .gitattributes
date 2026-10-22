@@ -1,0 +1,3 @@
+* text=auto eol=lf
+# Golden fixtures must keep their exact bytes (upstream uses LF).
+test/fixtures/** -text

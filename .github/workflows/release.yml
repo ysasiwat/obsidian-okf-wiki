@@ -1,0 +1,46 @@
+# Pushing a tag that equals the manifest version (x.y.z, no "v") builds the plugin, attests the
+# assets and opens a draft GitHub release with them (docs.obsidian.md: Release your plugin with
+# GitHub Actions). Publish the draft by hand after checking it.
+name: Release
+
+on:
+  push:
+    tags:
+      - "[0-9]+.[0-9]+.[0-9]+"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Tag matches manifest.json
+        run: |
+          tag="${GITHUB_REF#refs/tags/}"
+          version="$(node -p "require('./manifest.json').version")"
+          test "$tag" = "$version" || { echo "tag $tag != manifest version $version"; exit 1; }
+      # Tests ran in CI on the tagged commit; the release re-checks lint and builds.
+      - run: npm run lint
+      - run: npm run build
+      # Attestations need a public repository (or GitHub Enterprise); the step turns on once it is public.
+      - uses: actions/attest@v4
+        if: ${{ !github.event.repository.private }}
+        with:
+          subject-path: |
+            main.js
+            manifest.json
+            styles.css
+      - name: Draft release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="${GITHUB_REF#refs/tags/}"
+          gh release create "$tag" --title "$tag" --draft main.js manifest.json styles.css

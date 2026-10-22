@@ -1,0 +1,23 @@
+obsidian-okf-wiki
+Copyright 2026 ys and contributors
+
+This product includes material from the following projects.
+
+-------------------------------------------------------------------------------
+Open Knowledge Format (https://github.com/google/open-knowledge-format)
+Copyright 2026 Google LLC
+Licensed under the Apache License, Version 2.0.
+
+  - test/fixtures/okf-bundles/**: copies of the sample bundles in `bundles/`.
+  - test/cross/okf_reference_document.py: src/reference_agent/bundle/document.py,
+    unmodified, used by the cross-implementation test.
+  - Behaviour of src/core/trust.ts (trust tiers, staleness, verified
+    normalization) follows SPEC.md and src/reference_agent/bundle/document.py.
+
+-------------------------------------------------------------------------------
+obsidian-local-rest-api (https://github.com/coddingtonbear/obsidian-local-rest-api)
+Copyright (c) 2023, Adam Coddington. MIT License.
+
+  No code from it is included. It served as the design reference for the
+  transport, MCP handling and path guard; files that follow one of its designs
+  say so in their header.
