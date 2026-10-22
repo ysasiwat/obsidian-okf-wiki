@@ -53,6 +53,7 @@
       <a href="#usage">Usage</a>
       <ul>
         <li><a href="#connect-an-agent">Connect an agent</a></li>
+        <li><a href="#organizing-bundles">Organizing bundles</a></li>
         <li><a href="#how-agents-and-people-share-the-wiki">How agents and people share the wiki</a></li>
         <li><a href="#staying-in-control">Staying in control</a></li>
         <li><a href="#bundle-policy">Bundle policy</a></li>
@@ -186,6 +187,20 @@ Desktop only. Status: 0.6.3, early.
    ```
 
 4. Ask your agent something about the notes in the bundle.
+
+### Organizing bundles
+
+- **One bundle per body of knowledge whose notes link to each other.** Links, `sources` and
+  footnote citations cannot point outside their bundle, and the graph and backlinks stop at its
+  edge, so splitting related notes across bundles breaks them apart.
+- **Add another bundle only for a real boundary:** a different set of agents that may read or
+  write it (tokens can be limited to bundles), a different auto approve choice, a different
+  `.okf.yaml` policy, or a folder you share or sync on its own. Bundles cannot be nested.
+- **Inside a bundle, use folders for the kind of note and tags for the topic**, for example
+  `concepts/`, `playbooks/` and `decisions/`, with originals in `references/raw/`. A note has one
+  folder but many tags, and `okf_search` filters by both. Keep folders shallow.
+- **Notes outside every bundle are not served**, so personal notes and drafts can stay in the
+  same vault.
 
 ### How agents and people share the wiki
 
