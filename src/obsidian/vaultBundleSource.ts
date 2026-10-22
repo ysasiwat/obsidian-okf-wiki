@@ -61,7 +61,7 @@ export class VaultBundleSource implements BundleProvider {
   private version = 0;
   private isReady = false;
   private pending = new Set<string>();
-  private timer: ReturnType<typeof setTimeout> | null = null;
+  private timer: number | null = null;
   private unsubscribe: (() => void) | null = null;
   /** Bumped per path on every change, so a slow read never overwrites a newer one. */
   private generation = new Map<string, number>();
@@ -114,7 +114,7 @@ export class VaultBundleSource implements BundleProvider {
   dispose(): void {
     this.unsubscribe?.();
     this.unsubscribe = null;
-    if (this.timer) clearTimeout(this.timer);
+    if (this.timer) window.clearTimeout(this.timer);
     this.timer = null;
   }
 
@@ -207,13 +207,13 @@ export class VaultBundleSource implements BundleProvider {
 
   private schedule(bundlePath: string): void {
     this.pending.add(bundlePath);
-    if (this.timer) clearTimeout(this.timer);
-    this.timer = setTimeout(() => void this.flush(), this.options.debounceMs ?? 300);
+    if (this.timer) window.clearTimeout(this.timer);
+    this.timer = window.setTimeout(() => void this.flush(), this.options.debounceMs ?? 300);
   }
 
   /** Rebuild models for bundles with pending changes now. */
   async flush(): Promise<void> {
-    if (this.timer) clearTimeout(this.timer);
+    if (this.timer) window.clearTimeout(this.timer);
     this.timer = null;
     const paths = [...this.pending];
     this.pending.clear();
@@ -231,7 +231,7 @@ export class VaultBundleSource implements BundleProvider {
     // First load: every file is parsed, so do it in slices and keep Obsidian responsive.
     const run = ++state.rebuilds;
     try {
-      const model = await analyzeBundleSliced(this.snapshot(state), undefined, this.options.pause ?? (() => new Promise((r) => setTimeout(r, 0))));
+      const model = await analyzeBundleSliced(this.snapshot(state), undefined, this.options.pause ?? (() => new Promise((r) => window.setTimeout(r, 0))));
       if (run === state.rebuilds) state.handle = { name: state.path, model, version: ++this.version };
     } catch (e) {
       this.options.log?.(`could not analyze bundle '${state.path}'`, e);

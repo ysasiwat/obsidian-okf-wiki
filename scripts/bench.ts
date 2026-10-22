@@ -4,6 +4,7 @@
 // "write + queue" is one agent write followed by the Review Queue refresh the plugin runs after it;
 // "search after write" is the first search once a write has changed the bundle.
 
+import "../test/setup";
 import { analyzeBundle, analyzeBundleSliced } from "../src/core/bundle";
 import { lintBundle } from "../src/core/lint";
 import { KnowledgeService } from "../src/service/knowledgeService";

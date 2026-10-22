@@ -1,6 +1,6 @@
 {
   "name": "obsidian-okf-wiki",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "private": true,
   "description": "Obsidian plugin that serves an MCP server for agents and stores knowledge as Open Knowledge Format (OKF) v0.2 bundles.",
   "license": "Apache-2.0",

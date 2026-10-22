@@ -19,7 +19,7 @@
   <p align="center">
     Serve your Obsidian notes to AI agents over MCP as Open Knowledge Format bundles, with provenance, trust and freshness.
     <br />
-    <a href="docs/DESIGN.md"><strong>Explore the design »</strong></a>
+    <a href="#usage"><strong>Read the usage guide »</strong></a>
     <br />
     <br />
     <a href="https://github.com/ysasiwat/obsidian-okf-wiki/issues/new?labels=bug&template=bug-report.md">Report Bug</a>
@@ -85,8 +85,7 @@ Here's why:
 - You should decide which knowledge counts as reviewed, not the agent
 - Your notes stay plain Markdown that you can read and edit without the plugin
 
-Desktop only. Status: 0.6.1, early. The design is in [docs/DESIGN.md](docs/DESIGN.md) and the
-decisions behind it in [docs/adr/](docs/adr/) (both in Thai).
+Desktop only. Status: 0.6.2, early.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

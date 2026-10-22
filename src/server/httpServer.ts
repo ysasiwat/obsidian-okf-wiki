@@ -137,7 +137,7 @@ export class OkfHttpServer {
       } catch (e) {
         if ((e as { code?: string }).code !== "EADDRINUSE" || attempt >= START_ATTEMPTS) throw e;
         server.close();
-        await new Promise((r) => setTimeout(r, START_RETRY_MS));
+        await new Promise((r) => window.setTimeout(r, START_RETRY_MS));
         if (this.stopped) throw new Error("server stopped while waiting for the port");
       }
     }

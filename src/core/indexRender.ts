@@ -95,7 +95,7 @@ function summarize(model: BundleModel, dir: string): string {
   const files = listedFiles(model).filter((p) => p.startsWith(prefix)).length;
   const parts: string[] = [];
   if (concepts.length > 0) {
-    const types = [...new Set(concepts.map((c) => c.type ?? "untyped"))].sort(collator.compare);
+    const types = [...new Set(concepts.map((c) => c.type ?? "untyped"))].sort((a, b) => collator.compare(a, b));
     const shown = types.length > 3 ? `${types.slice(0, 3).join(", ")}, …` : types.join(", ");
     parts.push(`${concepts.length} concept${concepts.length === 1 ? "" : "s"}: ${shown}`);
   }
@@ -154,7 +154,7 @@ export function renderDirectoryIndex(model: BundleModel, dir: string, descriptio
     if (entries.length > 0) sections.push([`# ${heading}`, "", ...sortEntries(entries).map(line)].join("\n"));
   };
   section(SUBDIRECTORIES_HEADING, subdirs);
-  for (const type of [...byType.keys()].sort(collator.compare)) section(type, byType.get(type)!);
+  for (const type of [...byType.keys()].sort((a, b) => collator.compare(a, b))) section(type, byType.get(type)!);
   section(DEPRECATED_HEADING, deprecated);
 
   let header = "";

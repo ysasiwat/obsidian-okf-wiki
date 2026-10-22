@@ -28,10 +28,4 @@ export default defineConfig([
       }],
     },
   },
-  {
-    // Server, service and vault-event debouncing run in Node under test, where there is no window;
-    // popout windows do not concern them.
-    files: ["src/server/**", "src/service/**", "src/obsidian/vaultBundleSource.ts"],
-    rules: { "obsidianmd/prefer-window-timers": "off" },
-  },
 ]);

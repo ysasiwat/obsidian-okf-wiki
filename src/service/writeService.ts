@@ -419,7 +419,7 @@ export class WriteService {
       changes: files.map((f) => ({ path: f.path, change: f.before === null ? "created" : f.after === null ? "deleted" : "modified" })),
     };
     // Next turn of the event loop, so a slow or failing listener never holds up or breaks a write.
-    setTimeout(() => {
+    window.setTimeout(() => {
       try {
         listener(event);
       } catch (e) {

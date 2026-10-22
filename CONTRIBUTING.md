@@ -23,9 +23,9 @@ Thanks for helping improve OKF Wiki.
 | `src/cli/okf.ts` | `okf lint` / `okf index` CLI over okf-core |
 | `test/` | vitest suites; `test/fixtures/okf-bundles/` holds byte-exact copies of the OKF sample bundles |
 
-The design lives in [docs/DESIGN.md](docs/DESIGN.md) and decisions in [docs/adr/](docs/adr/), both
-written in Thai with English technical terms. When behaviour changes, update DESIGN.md or add an ADR
-in the same pull request.
+Code comments refer to design notes (DESIGN.md, ADRs) that are kept in the maintainer's development
+repository and not published here. To change behaviour, open an issue first so the design can be
+discussed.
 
 ## Guidelines
 
@@ -36,8 +36,8 @@ in the same pull request.
   `editConcept`; never re-serialize a whole frontmatter block.
 - **Lint codes are a contract.** Adding or renaming a code needs a case in
   `test/core/lint-rules.test.ts`.
-- **No `node:async_hooks` in plugin code**: it crashed Obsidian's renderer after plugin reloads
-  (ADR 0006). ESLint enforces this.
+- **No `node:async_hooks` in plugin code**: it crashed Obsidian's renderer after plugin reloads.
+  ESLint enforces this.
 - Use `zod` 4. Code, comments and stored knowledge are English.
 - One logical change per pull request, with a commit message that says what changed and why.
 

@@ -1,7 +1,7 @@
 {
   "id": "okf-wiki",
   "name": "OKF Wiki",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "minAppVersion": "1.13.1",
   "description": "Serve your notes to AI agents over MCP as Open Knowledge Format bundles, with provenance, trust and freshness.",
   "author": "Yoschanin Sasiwat",
