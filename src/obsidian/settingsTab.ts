@@ -372,7 +372,8 @@ class TokenCreatedModal extends Modal {
     contentEl.createEl("p", { text: "Copy it now. Only a hash is kept, so it cannot be shown again; if you lose it, revoke it and create another." });
     const snippets = clientSnippets(this.port, this.token);
     this.block(contentEl, "Token", this.token);
-    this.block(contentEl, "Claude Code", snippets.claudeCode);
+    this.block(contentEl, "Claude Code, this project folder (run it there)", snippets.claudeCodeLocal);
+    this.block(contentEl, "Claude Code, all your projects", snippets.claudeCodeUser);
     this.block(contentEl, ".mcp.json", snippets.mcpJson);
   }
 

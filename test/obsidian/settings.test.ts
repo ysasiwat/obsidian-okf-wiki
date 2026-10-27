@@ -31,7 +31,8 @@ describe("sanitizeSettings", () => {
 describe("clientSnippets", () => {
   it("builds Claude Code and .mcp.json configuration", () => {
     const s = clientSnippets(27150, "okf_abc");
-    expect(s.claudeCode).toBe('claude mcp add --transport http okf-wiki http://127.0.0.1:27150/mcp/ --header "Authorization: Bearer okf_abc"');
+    expect(s.claudeCodeLocal).toBe('claude mcp add --transport http --scope local okf-wiki http://127.0.0.1:27150/mcp/ --header "Authorization: Bearer okf_abc"');
+    expect(s.claudeCodeUser).toBe('claude mcp add --transport http --scope user okf-wiki http://127.0.0.1:27150/mcp/ --header "Authorization: Bearer okf_abc"');
     expect(JSON.parse(s.mcpJson).mcpServers["okf-wiki"]).toEqual({
       type: "http", url: "http://127.0.0.1:27150/mcp/", headers: { Authorization: "Bearer okf_abc" },
     });

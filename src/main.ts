@@ -38,6 +38,7 @@ export default class OkfWikiPlugin extends Plugin {
   trust!: FileTrustLedger;
   private tracker!: HumanInputTracker;
   private badgeEl: HTMLElement | null = null;
+  private reviewEl: HTMLElement | null = null;
   tokens!: TokenStore;
   server: OkfHttpServer | null = null;
   serverError: string | null = null;
@@ -81,6 +82,11 @@ export default class OkfWikiPlugin extends Plugin {
     // Human in the loop (DESIGN.md §5, §9).
     this.registerView(REVIEW_QUEUE_VIEW, (leaf) => new ReviewQueueView(leaf, this));
     this.badgeEl = this.addStatusBarItem();
+    this.reviewEl = this.addStatusBarItem();
+    this.reviewEl.addClass("mod-clickable");
+    this.reviewEl.setAttr("aria-label", "Open review queue");
+    this.reviewEl.toggle(false);
+    this.registerDomEvent(this.reviewEl, "click", () => void this.openReviewQueue());
     this.registerInterval(window.setInterval(() => void this.stampPendingEdits(), 10_000));
     this.registerEvent(
       this.app.workspace.on("active-leaf-change", () => {
@@ -88,6 +94,7 @@ export default class OkfWikiPlugin extends Plugin {
         this.refreshBadge();
       }),
     );
+    this.addRibbonIcon("list-checks", "Open review queue", () => void this.openReviewQueue());
     this.addCommand({ id: "open-review-queue", name: "Open review queue", callback: () => void this.openReviewQueue() });
     this.addCommand({ id: "approve-note", name: "Approve this note", checkCallback: this.onActive((b, id) => this.humanWrite(b, { kind: "verify", conceptId: id, approve: true }, "approved")) });
     this.addCommand({ id: "reject-note", name: "Reject the agent's latest change to this note…", checkCallback: this.onActive(async (b, id) => this.openReject(b, id)) });
@@ -272,9 +279,18 @@ export default class OkfWikiPlugin extends Plugin {
   refreshViews(): void {
     this.refreshStatus();
     this.refreshBadge();
+    this.refreshReviewCount();
     for (const leaf of this.app.workspace.getLeavesOfType(REVIEW_QUEUE_VIEW)) {
       if (leaf.view instanceof ReviewQueueView) leaf.view.render();
     }
+  }
+
+  /** Pending review items in the status bar, hidden at zero (DESIGN.md §9). */
+  private refreshReviewCount(): void {
+    if (!this.reviewEl) return;
+    const n = this.service.reviewQueue().length;
+    this.reviewEl.setText(`OKF review: ${n}`);
+    this.reviewEl.toggle(n > 0);
   }
 
   /** Trust badge for the active note (DESIGN.md §9). */

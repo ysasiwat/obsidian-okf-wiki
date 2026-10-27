@@ -110,10 +110,13 @@ export function endpointUrl(port: number): string {
 }
 
 /** Ready-to-paste client configuration for a new token. */
-export function clientSnippets(port: number, token: string, name = "okf-wiki"): { claudeCode: string; mcpJson: string } {
+export function clientSnippets(port: number, token: string, name = "okf-wiki"): { claudeCodeLocal: string; claudeCodeUser: string; mcpJson: string } {
   const url = endpointUrl(port);
+  // Not --scope project: that writes the token into the project's .mcp.json, which is usually committed.
+  const add = (scope: string) => `claude mcp add --transport http --scope ${scope} ${name} ${url} --header "Authorization: Bearer ${token}"`;
   return {
-    claudeCode: `claude mcp add --transport http ${name} ${url} --header "Authorization: Bearer ${token}"`,
+    claudeCodeLocal: add("local"),
+    claudeCodeUser: add("user"),
     mcpJson: JSON.stringify({ mcpServers: { [name]: { type: "http", url, headers: { Authorization: `Bearer ${token}` } } } }, null, 2),
   };
 }

@@ -39,7 +39,6 @@
       <ul>
         <li><a href="#features">Features</a></li>
         <li><a href="#network-use-and-data">Network use and data</a></li>
-        <li><a href="#built-with">Built With</a></li>
       </ul>
     </li>
     <li>
@@ -47,27 +46,41 @@
       <ul>
         <li><a href="#prerequisites">Prerequisites</a></li>
         <li><a href="#installation">Installation</a></li>
+        <li><a href="#first-time-setup">First-time setup</a></li>
       </ul>
     </li>
     <li>
       <a href="#usage">Usage</a>
       <ul>
         <li><a href="#connect-an-agent">Connect an agent</a></li>
-        <li><a href="#organizing-bundles">Organizing bundles</a></li>
-        <li><a href="#how-agents-and-people-share-the-wiki">How agents and people share the wiki</a></li>
+        <li><a href="#access-tokens-and-scopes">Access tokens and scopes</a></li>
+        <li><a href="#reviewing-what-agents-write">Reviewing what agents write</a></li>
+        <li><a href="#trust-and-provenance">Trust and provenance</a></li>
         <li><a href="#staying-in-control">Staying in control</a></li>
+        <li><a href="#organizing-bundles">Organizing bundles</a></li>
         <li><a href="#bundle-policy">Bundle policy</a></li>
-        <li><a href="#the-okf-cli">The okf CLI</a></li>
-        <li><a href="#for-plugin-developers">For plugin developers</a></li>
       </ul>
     </li>
     <li><a href="#roadmap">Roadmap</a></li>
-    <li><a href="#contributing">Contributing</a></li>
     <li><a href="#support">Support</a></li>
+    <li>
+      <a href="#building-and-extending">Building and Extending</a>
+      <ul>
+        <li><a href="#built-with">Built With</a></li>
+        <li><a href="#build-from-source">Build from source</a></li>
+        <li><a href="#the-okf-cli">The okf CLI</a></li>
+        <li><a href="#extension-api-for-other-plugins">Extension API for other plugins</a></li>
+        <li><a href="#contributing">Contributing</a></li>
+      </ul>
+    </li>
     <li><a href="#license">License</a></li>
     <li><a href="#acknowledgments">Acknowledgments</a></li>
   </ol>
 </details>
+
+Everything from **About The Project** to **Support** is for people who use the plugin in Obsidian and
+needs no programming. Building, testing, the `okf` CLI and the API for other plugins are in
+[Building and Extending](#building-and-extending).
 
 
 
@@ -86,7 +99,7 @@ Here's why:
 - You should decide which knowledge counts as reviewed, not the agent
 - Your notes stay plain Markdown that you can read and edit without the plugin
 
-Desktop only. Status: 0.6.3, early.
+Desktop only. Status: 0.7.0, early.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -128,19 +141,6 @@ Desktop only. Status: 0.6.3, early.
 
 
 
-### Built With
-
-* [![TypeScript][TypeScript-shield]][TypeScript-url]
-* [![Obsidian][Obsidian-shield]][Obsidian-url]
-* [![MCP][MCP-shield]][MCP-url]
-* [![Zod][Zod-shield]][Zod-url]
-* [![esbuild][esbuild-shield]][esbuild-url]
-* [![Vitest][Vitest-shield]][Vitest-url]
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-
 <!-- GETTING STARTED -->
 ## Getting Started
 
@@ -155,14 +155,40 @@ Desktop only. Status: 0.6.3, early.
 2. To install by hand instead, download `main.js`, `manifest.json` and `styles.css` from the
    [latest release](https://github.com/ysasiwat/obsidian-okf-wiki/releases) into
    `<vault>/.obsidian/plugins/okf-wiki/`, then enable the plugin.
-3. To build from source (Node.js 22 or later):
-   ```sh
-   git clone https://github.com/ysasiwat/obsidian-okf-wiki.git
-   cd obsidian-okf-wiki
-   npm ci
-   npm run build
-   node scripts/install-plugin.mjs <path-to-vault>
-   ```
+
+To build the plugin from source instead, see [Build from source](#build-from-source).
+
+### First-time setup
+
+From a fresh install to your first approved note. The steps use Claude Code;
+other MCP clients work the same way with the `.mcp.json` snippet.
+
+1. **Choose a folder.** Pick a folder in your vault for the knowledge agents may use, or create an
+   empty one, for example `Knowledge`. Notes outside it stay private.
+2. **Serve it.** Open **Settings → OKF Wiki**. Under **Bundles**, type the folder path in
+   **Add a folder** and press **Add**.
+3. **Set your ID.** Under **Agent writes**, fill in **Your ID**, for example your name. You need it
+   to approve notes, and it records your own edits.
+4. **Create a token.** Under **New token**, enter a name such as `claude-code`. Turn on
+   **Scope: Write** if the agent may write drafts; leave it off for read only. Press
+   **Create token**.
+5. **Copy a command.** A dialog shows the token once, with two **Claude Code** commands (one for
+   this project folder, one for all your projects) and a `.mcp.json` snippet. Copy the one you need
+   before you close it; if you lose it, revoke the token and create another. The status bar now shows `OKF MCP :27150 · 1 bundle`.
+6. **Connect Claude Code.** Paste the command in a terminal, then start `claude`:
+   - **This project folder** (`--scope local`) adds the server only for the folder you run it in,
+     so run it in the folder where you start Claude Code.
+   - **All your projects** (`--scope user`) adds it for every folder.
+
+   Avoid `--scope project`: it writes the token into the project's `.mcp.json`, which is often
+   committed to git.
+7. **Try it.** Ask, for example, "Which OKF bundles can you use, and what is in them?" With
+   Write, ask it to write a short note on a topic you know, citing its sources.
+8. **Review the draft.** Run the command **Open review queue** and read the new note. Press
+   **Approve** next to it, or **Reject** with a reason the agent can read.
+
+Next, read [Organizing bundles](#organizing-bundles) before your bundle grows, and
+[Access tokens and scopes](#access-tokens-and-scopes) before you give tokens to more agents.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -176,42 +202,52 @@ Desktop only. Status: 0.6.3, early.
 1. In the plugin settings under **Bundles**, add a folder to serve. Any folder works; it becomes an
    OKF bundle (an `index.md`, a `log.md` and optionally a `.okf.yaml` policy). Folders that
    already look like OKF bundles are offered for you to enable.
-2. Under **Access tokens**, create a token. New tokens can read; tick **Write** to let agents
-   write drafts. **Publish**, **Replace raw sources** and **Edit computations** are for trusted
-   automation only.
-3. Copy the command shown for Claude Code (or the `.mcp.json` snippet for other clients), for
-   example:
+2. Under **New token**, create a token (see [Access tokens and scopes](#access-tokens-and-scopes)).
+   New tokens can read; turn on **Scope: Write** to let agents write drafts.
+3. Copy a command shown for Claude Code (or the `.mcp.json` snippet for other clients). For this
+   project folder only, run it in that folder:
 
    ```sh
-   claude mcp add --transport http okf-wiki http://127.0.0.1:27150/mcp/ --header "Authorization: Bearer okf_…"
+   claude mcp add --transport http --scope local okf-wiki http://127.0.0.1:27150/mcp/ --header "Authorization: Bearer okf_…"
    ```
+
+   For all your projects, the command uses `--scope user` instead.
 
 4. Ask your agent something about the notes in the bundle.
 
-### Organizing bundles
+The agent gets these tools. Reading: `okf_bundles`, `okf_browse`, `okf_read`, `okf_read_file`
+(non-markdown text such as attester code), `okf_search`, `okf_graph`, `okf_history`, `okf_lint`.
+Writing (Write scope): `okf_create`, `okf_update`, `okf_move`, `okf_deprecate`,
+`okf_describe_directory`, `okf_ingest_raw`, `okf_request_review`. Prompts: `okf_author_concept`
+and `okf_distill_raw`.
 
-- **One bundle per body of knowledge whose notes link to each other.** Links, `sources` and
-  footnote citations cannot point outside their bundle, and the graph and backlinks stop at its
-  edge, so splitting related notes across bundles breaks them apart.
-- **Add another bundle only for a real boundary:** a different set of agents that may read or
-  write it (tokens can be limited to bundles), a different auto approve choice, a different
-  `.okf.yaml` policy, or a folder you share or sync on its own. Bundles cannot be nested.
-- **Inside a bundle, use folders for the kind of note and tags for the topic**, for example
-  `concepts/`, `playbooks/` and `decisions/`, with originals in `references/raw/`. A note has one
-  folder but many tags, and `okf_search` filters by both. Keep folders shallow.
-- **Notes outside every bundle are not served**, so personal notes and drafts can stay in the
-  same vault.
+### Access tokens and scopes
 
-### How agents and people share the wiki
+Give each agent its own token, created under **New token** in the settings:
 
-- **Tools.** Reading: `okf_bundles`, `okf_browse`, `okf_read`, `okf_read_file` (non-markdown text such as attester code), `okf_search`, `okf_graph`,
-  `okf_history`, `okf_lint`. Writing (Write scope): `okf_create`, `okf_update`, `okf_move`,
-  `okf_deprecate`, `okf_describe_directory`, `okf_ingest_raw`, `okf_request_review`. Prompts:
-  `okf_author_concept` and `okf_distill_raw`.
+- **New token name** identifies the agent in logs, for example `claude-code`.
+- **Limit to bundles** and **Limit to paths** restrict the token to some bundle folders, or to some
+  folders inside them (such as `concepts` and `decisions`). Empty means everything.
+- Every token can read. Extra scopes:
+  - **Write**: create, update, move and deprecate notes and ingest raw sources. New notes are drafts.
+  - **Publish**, **Replace raw sources** and **Edit computations** are for trusted automation only.
+    Publish makes drafts stable without a person's review.
+- **Automated process** stamps the token's writes as `process:<name>` instead of the agent's name
+  and version.
+
+The token is shown once, together with the Claude Code commands and the `.mcp.json` snippet. Only a
+hash is kept, so if you lose a token, revoke it under **Access tokens** and create another.
+
+### Reviewing what agents write
+
 - **Agents write drafts.** Everything an agent creates starts as `draft`. Only you, in Obsidian, can
   approve a note (**Approve this note**, or the **Review queue**); no token can mark knowledge as
-  reviewed by a person. In the review queue you can tick several notes, or **Select all without
-  errors**, and **Approve selected** in one go.
+  reviewed by a person. Approving needs **Your ID** (under **Agent writes**).
+- **The review queue** lists drafts and other notes that need you, such as stale notes or notes an
+  agent asked you to review. Open it with the command **Open review queue**. From the next release
+  after 0.6.3, a ribbon icon (a checklist, `list-checks`) opens it too, and the status bar shows
+  `OKF review: N` while notes wait for you (click it to open the queue). You can tick several notes,
+  or **Select all without errors**, and **Approve selected** in one go.
 - **Auto approve (optional, off by default).** Under **Auto approve**, list the tokens (and
   optionally bundles) you trust. A note such a token writes that cites its sources in footnotes and
   has no lint warnings or review request is approved at once as `process:auto-approve`: it becomes
@@ -220,9 +256,12 @@ Desktop only. Status: 0.6.3, early.
 - **Reject.** **Reject** in the review queue, or **Reject the agent's latest change to this note…**,
   undoes the agent's latest change to that note (a new draft goes to the trash) and writes your
   reason to `log.md`, where agents read it.
+
+### Trust and provenance
+
 - **Provenance is recorded for you.** The server stamps who wrote each note, keeps `index.md` and
   `log.md` up to date, and, once you set **Your ID**, records your own edits when you leave a note
-  (turn this off with **Record your edits**). Approving needs **Your ID** too.
+  (turn this off with **Record your edits**).
 - **Trust you can check.** If someone edits `status` or `verified` outside the plugin (another
   device, a script), the note is reported as not attested instead of trusted.
 - **Original sources stay original.** Curated notes are English. Material in other languages is
@@ -240,6 +279,20 @@ Other commands: **Open review queue**, **Accept edits to this raw source**, **Co
 this bundle to OKF form**, **Reload OKF bundles**, **Copy MCP endpoint URL**, **Restart MCP
 server**.
 
+### Organizing bundles
+
+- **One bundle per body of knowledge whose notes link to each other.** Links, `sources` and
+  footnote citations cannot point outside their bundle, and the graph and backlinks stop at its
+  edge, so splitting related notes across bundles breaks them apart.
+- **Add another bundle only for a real boundary:** a different set of agents that may read or
+  write it (tokens can be limited to bundles), a different auto approve choice, a different
+  `.okf.yaml` policy, or a folder you share or sync on its own. Bundles cannot be nested.
+- **Inside a bundle, use folders for the kind of note and tags for the topic**, for example
+  `concepts/`, `playbooks/` and `decisions/`, with originals in `references/raw/`. A note has one
+  folder but many tags, and `okf_search` filters by both. Keep folders shallow.
+- **Notes outside every bundle are not served**, so personal notes and drafts can stay in the
+  same vault.
+
 ### Bundle policy
 
 A bundle may carry a `.okf.yaml` file:
@@ -252,6 +305,68 @@ non_english_threshold: 0.05
 auto_index: true
 auto_log: true
 agent_initial_status: draft
+```
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
+
+<!-- ROADMAP -->
+## Roadmap
+
+- [x] Read-only MCP server with OKF lint and the `okf` CLI
+- [x] Agent writes with drafts, snapshots, revert and rate limits
+- [x] Review queue, batch approve, auto approve and reject
+- [x] Extension API for other plugins
+
+See the [open issues](https://github.com/ysasiwat/obsidian-okf-wiki/issues) for a full
+list of proposed features (and known issues).
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
+
+<!-- SUPPORT -->
+## Support
+
+Like this project? A coffee keeps it going — every cup funds issues, fixes, and
+new features.
+
+<div align="center">
+  <a href="https://buymeacoffee.com/ysasiwat" target="_blank">
+    <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" width="217" height="60">
+  </a>
+</div>
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
+
+<!-- BUILDING AND EXTENDING -->
+## Building and Extending
+
+This part is for people who build the plugin, check bundles in CI, write plugins on top of OKF Wiki,
+or contribute. You do not need any of it to use the plugin.
+
+### Built With
+
+* [![TypeScript][TypeScript-shield]][TypeScript-url]
+* [![Obsidian][Obsidian-shield]][Obsidian-url]
+* [![MCP][MCP-shield]][MCP-url]
+* [![Zod][Zod-shield]][Zod-url]
+* [![esbuild][esbuild-shield]][esbuild-url]
+* [![Vitest][Vitest-shield]][Vitest-url]
+
+### Build from source
+
+Needs Node.js 22 or later:
+
+```sh
+git clone https://github.com/ysasiwat/obsidian-okf-wiki.git
+cd obsidian-okf-wiki
+npm ci
+npm run build
+node scripts/install-plugin.mjs <path-to-vault>
 ```
 
 ### The `okf` CLI
@@ -267,7 +382,7 @@ node dist/okf.cjs index path/to/bundle           # exit 1 if index.md files are 
 node dist/okf.cjs index path/to/bundle --write   # regenerate them
 ```
 
-### For plugin developers
+### Extension API for other plugins
 
 Other plugins can read the wiki and follow its changes, but not write to it:
 
@@ -292,29 +407,7 @@ if (api?.apiVersion === 1) {
 - When OKF Wiki is disabled or reloaded, listeners are dropped and the old `api` object throws; get
   it again once OKF Wiki is enabled. The types are in [src/api.ts](src/api.ts).
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-
-<!-- ROADMAP -->
-## Roadmap
-
-- [x] Read-only MCP server with OKF lint and the `okf` CLI
-- [x] Agent writes with drafts, snapshots, revert and rate limits
-- [x] Review queue, batch approve, auto approve and reject
-- [x] Extension API for other plugins
-- [ ] Publish the extension API types as an npm package
-- [ ] HTTPS and signed URLs for attachments, once a client needs them
-
-See the [open issues](https://github.com/ysasiwat/obsidian-okf-wiki/issues) for a full
-list of proposed features (and known issues).
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-
-<!-- CONTRIBUTING -->
-## Contributing
+### Contributing
 
 Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) for the project's rules, then:
 
@@ -340,22 +433,6 @@ npm run bench         # UI-thread cost on large synthetic bundles
 <a href="https://github.com/ysasiwat/obsidian-okf-wiki/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=ysasiwat/obsidian-okf-wiki" alt="contrib.rocks image" />
 </a>
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-
-<!-- SUPPORT -->
-## Support
-
-Like this project? A coffee keeps it going — every cup funds issues, fixes, and
-new features.
-
-<div align="center">
-  <a href="https://buymeacoffee.com/ysasiwat" target="_blank">
-    <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" width="217" height="60">
-  </a>
-</div>
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
