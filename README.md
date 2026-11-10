@@ -218,8 +218,8 @@ Next, read [Organizing bundles](#organizing-bundles) before your bundle grows, a
 The agent gets these tools. Reading: `okf_bundles`, `okf_browse`, `okf_read`, `okf_read_file`
 (non-markdown text such as attester code), `okf_search`, `okf_graph`, `okf_history`, `okf_lint`.
 Writing (Write scope): `okf_create`, `okf_update`, `okf_move`, `okf_deprecate`,
-`okf_describe_directory`, `okf_ingest_raw`, `okf_request_review`. Prompts: `okf_author_concept`
-and `okf_distill_raw`.
+`okf_describe_directory`, `okf_ingest_raw`, `okf_request_review`. Publishing (Publish scope):
+`okf_publish`. Prompts: `okf_author_concept` and `okf_distill_raw`.
 
 ### Access tokens and scopes
 
@@ -244,9 +244,9 @@ hash is kept, so if you lose a token, revoke it under **Access tokens** and crea
   approve a note (**Approve this note**, or the **Review queue**); no token can mark knowledge as
   reviewed by a person. Approving needs **Your ID** (under **Agent writes**).
 - **The review queue** lists drafts and other notes that need you, such as stale notes or notes an
-  agent asked you to review. Open it with the command **Open review queue**. From the next release
-  after 0.6.3, a ribbon icon (a checklist, `list-checks`) opens it too, and the status bar shows
-  `OKF review: N` while notes wait for you (click it to open the queue). You can tick several notes,
+  agent asked you to review. Open it with the command **Open review queue** or the ribbon icon (a
+  checklist, `list-checks`). The status bar shows `OKF review: N` while notes wait for you (click it
+  to open the queue). You can tick several notes,
   or **Select all without errors**, and **Approve selected** in one go.
 - **Auto approve (optional, off by default).** Under **Auto approve**, list the tokens (and
   optionally bundles) you trust. A note such a token writes that cites its sources in footnotes and
