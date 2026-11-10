@@ -2,19 +2,17 @@
 
 
 
-<!-- PROJECT SHIELDS -->
+<!-- PROJECT LOGO -->
+<br />
+<div align="center">
+  <h3 align="center">OKF Wiki</h3>
+
+<!-- PROJECT SHIELDS — keep the blank lines around this block and no indent -->
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
 [![Apache-2.0 License][license-shield]][license-url]
-
-
-
-<!-- PROJECT HEADER -->
-<br />
-<div align="center">
-  <h3 align="center">OKF Wiki</h3>
 
   <p align="center">
     Serve your Obsidian notes to AI agents over MCP as Open Knowledge Format bundles, with provenance, trust and freshness.
@@ -38,6 +36,7 @@
       <a href="#about-the-project">About The Project</a>
       <ul>
         <li><a href="#features">Features</a></li>
+        <li><a href="#built-with">Built With</a></li>
         <li><a href="#network-use-and-data">Network use and data</a></li>
       </ul>
     </li>
@@ -58,15 +57,14 @@
         <li><a href="#trust-and-provenance">Trust and provenance</a></li>
         <li><a href="#staying-in-control">Staying in control</a></li>
         <li><a href="#organizing-bundles">Organizing bundles</a></li>
-        <li><a href="#bundle-policy">Bundle policy</a></li>
       </ul>
     </li>
+    <li><a href="#configuration">Configuration</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#support">Support</a></li>
     <li>
       <a href="#building-and-extending">Building and Extending</a>
       <ul>
-        <li><a href="#built-with">Built With</a></li>
         <li><a href="#build-from-source">Build from source</a></li>
         <li><a href="#the-okf-cli">The okf CLI</a></li>
         <li><a href="#extension-api-for-other-plugins">Extension API for other plugins</a></li>
@@ -115,6 +113,19 @@ Desktop only. Status: 0.7.0, early.
 - **Language policy:** curated notes in English, original sources kept as raw files in any language
 - **Extension API:** other plugins can read the wiki and follow every change
 - **`okf` CLI:** lint any OKF bundle in CI
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
+
+### Built With
+
+* [![TypeScript][TypeScript-shield]][TypeScript-url]
+* [![Obsidian][Obsidian-shield]][Obsidian-url]
+* [![MCP][MCP-shield]][MCP-url]
+* [![Zod][Zod-shield]][Zod-url]
+* [![esbuild][esbuild-shield]][esbuild-url]
+* [![Vitest][Vitest-shield]][Vitest-url]
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -293,19 +304,27 @@ server**.
 - **Notes outside every bundle are not served**, so personal notes and drafts can stay in the
   same vault.
 
-### Bundle policy
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-A bundle may carry a `.okf.yaml` file:
 
-```yaml
-okf_version: "0.2"
-content_language: en
-raw_dirs: [references/raw]
-non_english_threshold: 0.05
-auto_index: true
-auto_log: true
-agent_initial_status: draft
-```
+
+<!-- CONFIGURATION -->
+## Configuration
+
+Most settings live under **Settings → OKF Wiki** (see [Usage](#usage)). Rules for one bundle live
+in a `.okf.yaml` file at the bundle's root, so `okf lint` in CI and every device apply the same
+rules. Agents cannot change it: MCP tools write only `.md` files. A missing file or key uses the
+default.
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `okf_version` | string | `"0.2"` | OKF version of the bundle |
+| `content_language` | string | `en` | Language curated notes are written in (BCP 47) |
+| `raw_dirs` | list | `[references/raw]` | Folders whose notes are raw sources in any language |
+| `non_english_threshold` | number | `0.05` | Largest share of non-Latin letters in a curated note before it counts as non-English |
+| `auto_index` | boolean | `true` | Keep `index.md` files up to date on every write; `false` means you maintain them by hand |
+| `auto_log` | boolean | `true` | Add an entry to `log.md` on every write |
+| `agent_initial_status` | `draft` or `stable` | `draft` | Status of notes an agent creates |
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -347,15 +366,6 @@ new features.
 
 This part is for people who build the plugin, check bundles in CI, write plugins on top of OKF Wiki,
 or contribute. You do not need any of it to use the plugin.
-
-### Built With
-
-* [![TypeScript][TypeScript-shield]][TypeScript-url]
-* [![Obsidian][Obsidian-shield]][Obsidian-url]
-* [![MCP][MCP-shield]][MCP-url]
-* [![Zod][Zod-shield]][Zod-url]
-* [![esbuild][esbuild-shield]][esbuild-url]
-* [![Vitest][Vitest-shield]][Vitest-url]
 
 ### Build from source
 
