@@ -76,9 +76,10 @@ function cmdIndex(dir: string, flags: Set<string>): number {
 
 export function main(argv: string[]): number {
   const [command, target, ...rest] = argv;
-  if (!command || command === "--help" || command === "-h" || !target) {
+  const help = [command, target].some((a) => a === "--help" || a === "-h");
+  if (help || !command || !target) {
     process.stdout.write(USAGE);
-    return command ? 0 : 2;
+    return help ? 0 : 2;
   }
   const dir = resolve(target);
   if (!existsSync(dir) || !statSync(dir).isDirectory()) {

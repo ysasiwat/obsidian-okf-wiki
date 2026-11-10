@@ -236,7 +236,7 @@ function lintConcept(model: BundleModel, c: Concept, options: LintOptions, add: 
   for (const l of c.links) {
     if (l.link.kind === "wikilink" || l.link.kind === "embed") {
       at("wikilink", "warning", `Wikilink [[${l.link.target}]] is not a standard markdown link (OKF §6.1).`,
-        "Run 'Convert links to OKF form' or write `[text](relative/path.md)`.");
+        "Run 'Convert links in this bundle to OKF form' or write `[text](relative/path.md)`.");
     }
     if (l.resolution.kind === "outside") {
       at("link-outside-bundle", "warning", `Link '${l.link.target}' points outside the bundle.`);
@@ -247,7 +247,7 @@ function lintConcept(model: BundleModel, c: Concept, options: LintOptions, add: 
     }
     if (l.link.kind === "markdown" && l.link.target.startsWith("/")) {
       at("absolute-link", "warning", `Link '${l.link.target}' is bundle-absolute; Obsidian resolves '/' against the vault root.`,
-        "Use a path relative to this file (DESIGN.md §4.4).");
+        "Use a path relative to this file.");
     }
   }
   for (const f of c.fieldPaths) {
@@ -289,10 +289,10 @@ function lintConcept(model: BundleModel, c: Concept, options: LintOptions, add: 
     }
     if (typeof fm["content_sha256"] !== "string") {
       at("raw-hash-missing", "warning", "Raw source has no `content_sha256`; edits cannot be detected.",
-        "Re-ingest it with okf_ingest_raw, or run 'Accept raw edit'.");
+        "Re-ingest it with okf_ingest_raw, or have a person run 'Accept edits to this raw source'.");
     } else if (rawBodyModified(fm, c.body)) {
       at("raw-modified", "error", "Raw body no longer matches `content_sha256`.",
-        "Restore the original text, or have a person run 'Accept raw edit' if the change is intended.");
+        "Restore the original text, or have a person run 'Accept edits to this raw source' if the change is intended.");
     }
   }
 }

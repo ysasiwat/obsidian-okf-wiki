@@ -4,8 +4,8 @@ In this example you add a note to an OKF bundle by hand, find what is wrong with
 the bundle's indexes up to date, all with the `okf` tool. You start with a clean sample bundle and
 end with a bundle that has one new note and passes a strict lint.
 
-Tested with OKF Wiki 0.7.0 (`okf` built from source) on Windows 11 in Git Bash with Node.js 24.16.0,
-2026-11-11.
+Tested with OKF Wiki 0.7.0 (`okf` built from source, `main` after 0.7.0) on Windows 11 in Git Bash
+with Node.js 24.16.0, 2026-11-11.
 
 ## What you need
 
@@ -78,7 +78,7 @@ echo "exit=$?"
   warning tables/fees.md  [tag-format] `tags` is a single string; OKF §4.1 expects a YAML list.
       fix: Write `tags: [a, b]` instead of `tags: a, b`.
   warning tables/fees.md  [wikilink] Wikilink [[transactions]] is not a standard markdown link (OKF §6.1).
-      fix: Run 'Convert links to OKF form' or write `[text](relative/path.md)`.
+      fix: Run 'Convert links in this bundle to OKF form' or write `[text](relative/path.md)`.
   info    tables/outputs.md  [source-uncited] sources never cited in a footnote: outputs-table.
       fix: Attribute claims with footnotes keyed by sources[].id, e.g. `[^my-source]`.
   info    tables/transactions.md  [source-uncited] sources never cited in a footnote: bq-metadata, gcp-blog.

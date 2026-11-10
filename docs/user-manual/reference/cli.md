@@ -14,9 +14,10 @@ every `.md` file and `.okf.yaml` in it and skips folders whose name starts with 
 
 | Option | Default | Description |
 | ------ | ------- | ----------- |
-| `--help`, `-h` | | Show the usage and exit with 0. |
+| `--help`, `-h` | | Show the usage and exit with 0. Also works after a command, as in `okf lint --help`. |
 
-`okf` has no `--version` option. Run without arguments, it prints the usage and exits with 2.
+`okf` has no `--version` option. Run without arguments, or with a command but no `<bundle-dir>`, it
+prints the usage and exits with 2.
 
 ## `okf lint`
 
@@ -79,7 +80,7 @@ would change tables/index.md
 | ---- | ------- |
 | `0` | Success: no errors (no warnings with `--strict`), indexes up to date, or `--write` done. |
 | `1` | `lint` found errors (or warnings with `--strict`); `index --check` found an out-of-date index. |
-| `2` | No command, an unknown command, a `<bundle-dir>` that is not a folder, or an invalid `--min-severity`. |
+| `2` | No command, an unknown command, a missing `<bundle-dir>` or one that is not a folder, or an invalid `--min-severity`. |
 
 ## Environment variables
 

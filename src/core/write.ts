@@ -134,7 +134,7 @@ function checkReason(reason: string | undefined, required: boolean): string | un
     return undefined;
   }
   if (r.length > 500) throw new WriteError("invalid-argument", "`reason` is longer than 500 characters");
-  if (scriptStats(r).nonLatin > 0) throw new WriteError("policy", "`reason` must be English: log.md is English (DESIGN.md §4.8)");
+  if (scriptStats(r).nonLatin > 0) throw new WriteError("policy", "`reason` must be English: log.md is English");
   return r;
 }
 
@@ -226,7 +226,7 @@ function checkNonDestructive(beforeFm: Record<string, unknown>, afterFm: Record<
 function checkLanguage(model: BundleModel, path: string, fm: Record<string, unknown>, body: string | null): void {
   const bad = nonEnglishFrontmatterFields(fm);
   if (bad.length) {
-    throw new WriteError("policy", `${bad.join(", ")} must be English`, "Romanize proper nouns; keep original wording in `aliases` or `original_title` (DESIGN.md §4.8).");
+    throw new WriteError("policy", `${bad.join(", ")} must be English`, "Romanize proper nouns; keep original wording in `aliases` or `original_title`.");
   }
   if (body !== null && zoneOf(path, model.policy) === "curated") {
     const { violates, stats } = bodyIsNonEnglish(body, model.policy.non_english_threshold);

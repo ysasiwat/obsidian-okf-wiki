@@ -49,8 +49,17 @@ describe("okf CLI", () => {
     }
   });
 
+  it("prints usage and exits 0 for --help, also after a command", () => {
+    for (const argv of [["--help"], ["-h"], ["lint", "--help"], ["index", "-h"]]) {
+      out.length = 0;
+      expect(main(argv), argv.join(" ")).toBe(0);
+      expect(out.join("")).toMatch(/^Usage:/);
+    }
+  });
+
   it("rejects bad usage", () => {
     expect(main([])).toBe(2);
+    expect(main(["lint"])).toBe(2);
     expect(main(["lint", join(FIXTURE_ROOT, "nope")])).toBe(2);
     expect(main(["frobnicate", FIXTURE_ROOT])).toBe(2);
   });

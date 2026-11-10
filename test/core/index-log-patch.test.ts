@@ -130,4 +130,13 @@ describe("okf-core purity", () => {
       expect(src, f).not.toMatch(/from\s+["'](obsidian|node:[^"']+|fs|path|crypto)["']/);
     }
   });
+
+  it("cites no private design notes in messages and hints", () => {
+    // DESIGN.md is not in the public export, so a hint that points there leads nowhere.
+    const dir = join(__dirname, "../../src/core");
+    for (const f of readdirSync(dir).filter((x) => x.endsWith(".ts"))) {
+      const code = readFileSync(join(dir, f), "utf8").split("\n").filter((l) => !/^\s*(\/\/|\*|\/\*)/.test(l));
+      expect(code.filter((l) => /DESIGN\.md|\bADR \d/.test(l)), f).toEqual([]);
+    }
+  });
 });
