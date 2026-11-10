@@ -1,0 +1,21 @@
+# Optional: build the user manual as a website with MkDocs Material.
+#   pip install mkdocs-material
+#   mkdocs serve
+# docs_dir points at docs/user-manual so other folders under docs/ (adr/, agents/) are not published.
+site_name: "OKF Wiki user manual"
+repo_url: "https://github.com/ysasiwat/obsidian-okf-wiki"
+edit_uri: edit/main/docs/user-manual/
+docs_dir: docs/user-manual
+theme:
+  name: material
+  features:
+    - content.code.copy
+    - navigation.sections
+markdown_extensions:
+  - admonition
+  - tables
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format

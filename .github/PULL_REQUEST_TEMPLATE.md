@@ -17,3 +17,9 @@ Fixes # (issue)
 - [ ] `npm run typecheck`, `npm run lint` and `npm test` pass
 - [ ] DESIGN.md or an ADR is updated if behaviour changed
 - [ ] I have performed a self-review of my own code
+
+## User manual
+
+- [ ] This change does not affect users, **or** I updated `docs/user-manual/`.
+- [ ] Commands, options and output in the manual match what the tool does now.
+- [ ] If an example in `docs/user-manual/examples/` is affected, I ran it again and pasted the real output.

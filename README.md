@@ -208,6 +208,9 @@ Next, read [Organizing bundles](#organizing-bundles) before your bundle grows, a
 <!-- USAGE EXAMPLES -->
 ## Usage
 
+See the [user manual](docs/user-manual/index.md) for step-by-step guides, examples and the full
+reference.
+
 ### Connect an agent
 
 1. In the plugin settings under **Bundles**, add a folder to serve. Any folder works; it becomes an
