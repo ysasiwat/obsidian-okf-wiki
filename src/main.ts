@@ -20,6 +20,8 @@ import { autoApproveRule } from "./service/autoApprove";
 import { KnowledgeService } from "./service/knowledgeService";
 import { WriteService } from "./service/writeService";
 import { ExtensionHost, type OkfWikiApi } from "./api";
+import { LOCK_REFRESH_MS, removeLock, waitForRelease, writeLock } from "./node/handoff";
+import { BackgroundServer, type BackgroundState } from "./obsidian/backgroundServer";
 
 const LOG_PREFIX = "[okf-wiki]";
 
@@ -47,6 +49,16 @@ export default class OkfWikiPlugin extends Plugin {
   private usageDirty = false;
   private serverQueue: Promise<void> = Promise.resolve();
   private unloaded = false;
+  /** Absolute state folder and vault folder, for the hand-over with okf serve (ADR 0009). */
+  stateAbs: string | null = null;
+  vaultBase: string | null = null;
+  private readonly lockId = Math.random().toString(36).slice(2);
+  /** Writes paused for this session because okf serve did not release the vault in time. */
+  private handoffPaused = false;
+  /** okf serve controls for the settings (Windows desktop only), its last known state and whether an action runs. */
+  background: BackgroundServer | null = null;
+  backgroundState: BackgroundState | null = null;
+  backgroundBusy = false;
 
   override async onload(): Promise<void> {
     this.settings = sanitizeSettings(await this.loadData());
@@ -57,8 +69,23 @@ export default class OkfWikiPlugin extends Plugin {
     });
     const stateDir = `${this.manifest.dir ?? `${this.app.vault.configDir}/plugins/${this.manifest.id}`}/state`;
     const adapter = this.app.vault.adapter as unknown as StateAdapter;
+    // Claim the vault before anything else, so a running okf serve starts to release it.
+    if (this.app.vault.adapter instanceof FileSystemAdapter) {
+      this.vaultBase = this.app.vault.adapter.getBasePath();
+      this.stateAbs = `${this.vaultBase}/${stateDir}`;
+      if (BackgroundServer.supported()) this.background = new BackgroundServer(this.vaultBase, this.app.vault.configDir);
+      try {
+        if (!(await adapter.exists(stateDir))) await adapter.mkdir(stateDir);
+        const stateAbs = this.stateAbs;
+        const claim = (): void => writeLock(stateAbs, this.manifest.version, this.lockId);
+        claim();
+        this.registerInterval(window.setInterval(claim, LOCK_REFRESH_MS));
+      } catch (e) {
+        console.warn(LOG_PREFIX, "could not write the server lock", e);
+      }
+    }
+    // The trust ledger is loaded once okf serve has released the vault (onLayoutReady).
     this.trust = new FileTrustLedger(adapter, stateDir);
-    await this.trust.load();
     this.registerInterval(window.setInterval(() => void this.trust.flush(), 5_000));
     this.service = new KnowledgeService(this.source, undefined, this.trust);
     this.extensions = new ExtensionHost(this.service, (m, e) => console.warn(LOG_PREFIX, m, e ?? ""));
@@ -70,7 +97,7 @@ export default class OkfWikiPlugin extends Plugin {
     this.registerEditorExtension(tracker.extension);
     this.snapshots = new FileSnapshotStore(adapter, `${stateDir}/snapshots`);
     this.writes = new WriteService(this.source, new VaultFilePort(this.app, tracker), this.snapshots, new FileAuditLog(adapter, stateDir), {
-      paused: () => this.settings.agentWritesPaused,
+      paused: () => this.settings.agentWritesPaused || this.handoffPaused,
       perMinute: () => this.settings.writesPerMinute,
       perDay: () => this.settings.writesPerDay,
       log: (m, e) => console.warn(LOG_PREFIX, m, e ?? ""),
@@ -151,7 +178,22 @@ export default class OkfWikiPlugin extends Plugin {
     });
 
     this.app.workspace.onLayoutReady(async () => {
+      if (this.stateAbs && this.vaultBase) {
+        const handoff = await waitForRelease(this.stateAbs, this.vaultBase, undefined, (ms) => new Promise((r) => window.setTimeout(r, ms)));
+        if (handoff === "timeout") {
+          this.handoffPaused = true;
+          new Notice("OKF Wiki: the background server (okf serve) did not hand over the vault in time, so agent writes are paused until Obsidian restarts.");
+        }
+      }
+      await this.trust.load();
       await this.reloadBundles();
+      // After a plugin update, give an installed background server the matching version.
+      void this.background
+        ?.updateIfStale(this.manifest.version)
+        .then((v) => {
+          if (v) new Notice(`OKF Wiki: background server updated to ${v}.`);
+        })
+        .catch((e) => console.warn(LOG_PREFIX, "could not update the background server", e));
       await this.applyServerState("startup");
       this.discovered = (await this.source.discover()).filter((d) => !this.settings.dismissedBundles.includes(d));
       if (this.discovered.length > 0) {
@@ -169,7 +211,11 @@ export default class OkfWikiPlugin extends Plugin {
     this.server = null;
     if (stopping) console.debug(LOG_PREFIX, "MCP server stopped (unload)");
     this.source?.dispose();
-    void Promise.allSettled([stopping, this.trust?.flush()]);
+    const stateAbs = this.stateAbs;
+    // Hand the vault back to okf serve only once the ledger is on disk.
+    void Promise.allSettled([stopping, this.trust?.flush()]).then(() => {
+      if (stateAbs) removeLock(stateAbs, this.lockId);
+    });
   }
 
   async saveSettings(): Promise<void> {

@@ -41,6 +41,8 @@ export interface ServerOptions {
   allowedOrigins?: string[];
   log?: (level: "info" | "warn" | "error", message: string, error?: unknown) => void;
   now?: () => number;
+  /** Appended to the server instructions (buildServer.ts). */
+  instructionsNote?: string;
   /** The listener closed without stop(), so the owner can show that the server is down. */
   onUnexpectedClose?: () => void;
 }
@@ -184,6 +186,7 @@ export class OkfHttpServer {
     return buildMcpServer(this.options.service, principal, {
       version: this.options.version,
       ...(this.options.writes ? { writes: this.options.writes } : {}),
+      ...(this.options.instructionsNote ? { instructionsNote: this.options.instructionsNote } : {}),
       onError: (e) => this.log("error", "tool failed", e),
     });
   }

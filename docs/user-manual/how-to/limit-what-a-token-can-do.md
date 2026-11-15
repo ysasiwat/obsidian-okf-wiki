@@ -6,8 +6,8 @@ token and revoke the old one.
 
 ## Steps
 
-1. Open **Settings → OKF Wiki** and go to **New token**.
-2. Type the agent's name in **New token name**.
+1. Open **Settings → OKF Wiki** and go to **Access tokens** and select **Create token…**.
+2. Type the agent's name in **Name**.
 3. Optional: in **Limit to bundles**, list bundle folders separated by commas, for example
    `Knowledge, Projects`. Empty means all bundles.
 4. Optional: in **Limit to paths**, list folders inside the bundles, for example

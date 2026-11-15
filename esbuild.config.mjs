@@ -34,6 +34,23 @@ const options = {
   banner: { js: "/* okf-wiki: bundled by esbuild. Source: https://github.com/ysasiwat/obsidian-okf-wiki */" },
 };
 
+// okf serve, embedded so the settings can install the background server without a download
+// (ADR 0009). Same shim alias as the plugin, so the embedded text holds no new Function either.
+// shortcut: a watching build embeds the daemon as it was at start; restart `npm run dev` after changing it.
+const daemon = await esbuild.build({
+  entryPoints: ["src/cli/okf.ts"],
+  bundle: true,
+  platform: "node",
+  format: "cjs",
+  target: "node22",
+  minify: true,
+  write: false,
+  alias: options.alias,
+  banner: { js: "#!/usr/bin/env node" },
+  logLevel: "warning",
+});
+options.define = { __OKF_DAEMON_SOURCE__: JSON.stringify(daemon.outputFiles[0].text) };
+
 if (prod) {
   await esbuild.build(options);
 } else {

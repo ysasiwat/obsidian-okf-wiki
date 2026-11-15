@@ -38,6 +38,7 @@ One task per page, in numbered steps.
 - [Turn on auto approve](how-to/turn-on-auto-approve.md)
 - [Undo an agent change](how-to/undo-an-agent-change.md)
 - [Check bundles in CI](how-to/check-bundles-in-ci.md)
+- [Serve agents while Obsidian is closed](how-to/serve-while-obsidian-is-closed.md)
 
 ## Concepts
 

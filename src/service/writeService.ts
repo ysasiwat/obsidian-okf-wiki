@@ -154,6 +154,11 @@ export class WriteService {
   }
 
   /** Run `task` after every earlier write to the same bundle. */
+  /** Resolves once every write queued so far has finished. */
+  async idle(): Promise<void> {
+    await Promise.all([...this.queues.values()]);
+  }
+
   private enqueue<T>(bundle: string, task: () => Promise<T>): Promise<T> {
     const prev = this.queues.get(bundle) ?? Promise.resolve();
     const run = prev.then(task, task);

@@ -57,12 +57,16 @@ export interface BuildOptions {
   /** Present when writes are enabled; write tools are offered to tokens with the write scope. */
   writes?: WriteService;
   onError?: (error: unknown) => void;
+  /** A line appended to the server instructions, e.g. that the headless server is read-only. */
+  instructionsNote?: string;
 }
 
 export function buildMcpServer(service: KnowledgeService, principal: Principal, options: BuildOptions): McpServer {
   const server = new McpServer(
     { name: SERVER_NAME, version: options.version },
-    { capabilities: { tools: {}, resources: {}, prompts: {} }, instructions: SERVER_INSTRUCTIONS },
+    { capabilities: { tools: {}, resources: {}, prompts: {} }, instructions: options.instructionsNote ? `${SERVER_INSTRUCTIONS}
+
+${options.instructionsNote}` : SERVER_INSTRUCTIONS },
   );
 
   const run = (fn: () => object): CallToolResult => runTool(fn, options.onError);

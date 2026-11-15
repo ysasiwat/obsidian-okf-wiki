@@ -5,6 +5,8 @@ import { App, Modal, Notice, PluginSettingTab, Setting, TFolder, type SettingDef
 import { createTokenRecord, tokenNameErrors } from "../server/tokens";
 import type OkfWikiPlugin from "../main";
 import type { Scope } from "../service/types";
+import { readDaemon } from "../node/handoff";
+import type { BackgroundAction } from "./backgroundServer";
 import { RevertModal } from "./revertModal";
 import { clientSnippets, endpointUrl, USER_ID } from "./settings";
 import { bundlePathErrors } from "./vaultBundleSource";
@@ -59,7 +61,7 @@ export class OkfWikiSettingTab extends PluginSettingTab {
   }
 
   override getSettingDefinitions(): SettingDefinitionItem[] {
-    return [this.serverGroup(), this.bundleGroup(), this.writesGroup(), this.autoApproveGroup(), this.tokenGroup(), this.newTokenGroup(), this.advancedGroup()];
+    return [this.serverGroup(), this.backgroundGroup(), this.bundleGroup(), this.tokenGroup(), this.writesGroup(), this.autoApproveGroup(), this.advancedGroup()];
   }
 
   private async save(applyServer = false): Promise<void> {
@@ -73,7 +75,7 @@ export class OkfWikiSettingTab extends PluginSettingTab {
     const status = this.plugin.serverError
       ? `Error: ${this.plugin.serverError}`
       : this.plugin.server
-        ? `Running at ${endpointUrl(s.port)} (loopback only).`
+        ? `Running in Obsidian at ${endpointUrl(s.port)} (loopback only), ${this.plugin.source?.bundles().length ?? 0} bundle(s).${this.plugin.backgroundState?.installed ? " The background server takes over when Obsidian closes." : ""}`
         : s.serverEnabled
           ? "Stopped: create a token to start the server."
           : "Stopped.";
@@ -193,36 +195,38 @@ export class OkfWikiSettingTab extends PluginSettingTab {
         ),
       ));
     }
+    items.push(row("New token", "Create a token for an agent or a process. It is shown once.", (setting) =>
+      setting.addButton((btn) => btn.setButtonText("Create token…").setCta().onClick(() => this.openNewToken())),
+    ));
     return { type: "group", heading: "Access tokens", items };
   }
 
-  private newTokenGroup(): SettingDefinitionItem {
-    const items: SettingDefinition[] = [
-      row("New token name", "Lowercase letters, digits, '.', '_' or '-'. It identifies the agent in logs, such as claude-code.", (setting) =>
-        setting.addText((t) => t.setPlaceholder("claude-code").setValue(this.newToken.name).onChange((v) => (this.newToken.name = v.trim()))),
-      ),
-      row("Limit to bundles", "Comma-separated bundle folders. Empty means all bundles.", (setting) =>
-        setting.addText((t) => t.setValue(this.newToken.bundles).onChange((v) => (this.newToken.bundles = v))),
-      ),
-      row("Limit to paths", "Comma-separated folders inside the bundles, such as concepts and decisions. Empty means everything.", (setting) =>
-        setting.addText((t) => t.setValue(this.newToken.pathPrefixes).onChange((v) => (this.newToken.pathPrefixes = v))),
-      ),
-      ...EXTRA_SCOPES.map((x) =>
-        row(`Scope: ${x.name}`, x.desc, (setting) =>
-          setting.addToggle((t) =>
-            t.setValue(this.newToken.scopes.has(x.scope)).onChange((v) => {
-              if (v) this.newToken.scopes.add(x.scope);
-              else this.newToken.scopes.delete(x.scope);
-            }),
-          ),
-        ),
-      ),
-      row("Automated process", "Writes are stamped process:<name> instead of <name>/<version>.", (setting) =>
-        setting.addToggle((t) => t.setValue(this.newToken.process).onChange((v) => (this.newToken.process = v))),
-      ),
-      row("Create the token", undefined, (setting) => setting.addButton((btn) => btn.setButtonText("Create token").setCta().onClick(() => this.createToken()))),
-    ];
-    return { type: "group", heading: "New token", items };
+  /** The new-token form, in a dialog rather than a section that is always open. */
+  private openNewToken(): void {
+    this.newToken = blankToken();
+    new FormModal(this.app, "New token", (el, close) => {
+      new Setting(el).setName("Name").setDesc("Lowercase letters, digits, '.', '_' or '-'. It identifies the agent in logs, such as claude-code.").addText((t) =>
+        t.setPlaceholder("claude-code").onChange((v) => (this.newToken.name = v.trim())),
+      );
+      new Setting(el).setName("Limit to bundles").setDesc("Comma-separated bundle folders. Empty means all bundles.").addText((t) => t.onChange((v) => (this.newToken.bundles = v)));
+      new Setting(el).setName("Limit to paths").setDesc("Comma-separated folders inside the bundles, such as concepts and decisions. Empty means everything.").addText((t) => t.onChange((v) => (this.newToken.pathPrefixes = v)));
+      for (const x of EXTRA_SCOPES) {
+        new Setting(el).setName(`Scope: ${x.name}`).setDesc(x.desc).addToggle((t) =>
+          t.onChange((v) => {
+            if (v) this.newToken.scopes.add(x.scope);
+            else this.newToken.scopes.delete(x.scope);
+          }),
+        );
+      }
+      new Setting(el).setName("Automated process").setDesc("Writes are stamped process:<name> instead of <name>/<version>.").addToggle((t) => t.onChange((v) => (this.newToken.process = v)));
+      new Setting(el)
+        .addButton((b) => b.setButtonText("Cancel").onClick(close))
+        .addButton((b) =>
+          b.setButtonText("Create token").setCta().onClick(async () => {
+            if (await this.createToken()) close();
+          }),
+        );
+    }).open();
   }
 
   private writesGroup(): SettingDefinitionItem {
@@ -276,6 +280,113 @@ export class OkfWikiSettingTab extends PluginSettingTab {
     };
   }
 
+  private async refreshBackground(): Promise<void> {
+    const p = this.plugin;
+    if (!p.background) return;
+    try {
+      p.backgroundState = await p.background.state();
+    } catch (e) {
+      const message = `Could not check the background server: ${e instanceof Error ? e.message : String(e)}`;
+      console.error("[okf-wiki]", message, e);
+      new Notice(`OKF Wiki: ${message}`);
+      p.backgroundState = { unavailable: message, installed: false, running: false, version: null };
+    }
+    this.update();
+  }
+
+  /** okf serve: the same server while Obsidian is closed (ADR 0009). */
+  private backgroundGroup(): SettingDefinitionItem {
+    const s = this.plugin.settings;
+    const p = this.plugin;
+    const intro = "Keeps this server answering agents while Obsidian is closed: a task starts it at logon, and it hands the server back whenever Obsidian opens this vault.";
+    const bg = p.background;
+    if (!bg) {
+      return {
+        type: "group",
+        heading: "Background server",
+        items: [row("Not available here", `${intro} The buttons work on Windows. On macOS and Linux, start okf serve with your service manager; see "Serve agents while Obsidian is closed" in the user manual.`)],
+      };
+    }
+    const st = p.backgroundState;
+    if (!st && !p.backgroundBusy) void this.refreshBackground();
+    const d = p.stateAbs ? readDaemon(p.stateAbs) : null;
+    const report = d ? ` Last report: ${d.state}${d.error ? ` (${d.error})` : ""} at ${new Date(d.at).toLocaleString()}.` : "";
+    const status = p.backgroundBusy
+      ? "Working…"
+      : !st
+        ? "Checking…"
+        : st.unavailable
+          ? st.unavailable
+          : !st.installed
+            ? "Not installed."
+            : `Installed (${st.version ?? "unknown version"}), ${st.running ? "running" : "not running"}.${report}`;
+    const act = (action: BackgroundAction, done: string) => async () => {
+      p.backgroundBusy = true;
+      this.update();
+      try {
+        await bg.act(action);
+        new Notice(`OKF Wiki: ${done}`);
+      } catch (e) {
+        new Notice(`OKF Wiki: could not ${action} the background server: ${(e as Error).message}`);
+      } finally {
+        p.backgroundBusy = false;
+        await this.refreshBackground();
+      }
+    };
+    const confirm = (message: string, label: string, run: () => Promise<void>) => () => new ConfirmModal(this.app, message, run, label).open();
+    const buttons = (setting: Setting): void => {
+      if (!st || st.unavailable || p.backgroundBusy) {
+        if (st?.unavailable) setting.addButton((b) => b.setButtonText("Get Node.js").onClick(() => window.open("https://nodejs.org/")));
+        return;
+      }
+      if (!st.installed) {
+        setting.addButton((b) =>
+          b.setButtonText("Install").setCta().onClick(confirm(
+            `Install the background server? This writes okf.cjs to your user folder (.okf-wiki) and adds a Task Scheduler task that runs it with Node.js each time you log on to Windows. Remove both with Uninstall.`,
+            "Install",
+            act("install", "background server installed and started."),
+          )),
+        );
+        return;
+      }
+      if (st.running) setting.addButton((b) => b.setButtonText("Stop").onClick(act("stop", "background server stopped until the next logon.")));
+      else setting.addButton((b) => b.setButtonText("Start").setCta().onClick(act("start", "background server started.")));
+      setting.addButton((b) =>
+        b.setButtonText("Uninstall").setDestructive().onClick(confirm(
+          "Uninstall the background server? This stops it and removes its logon task. Agents can then reach this vault only while Obsidian is open.",
+          "Uninstall",
+          act("uninstall", "background server removed."),
+        )),
+      );
+    };
+    return {
+      type: "group",
+      heading: "Background server",
+      items: [
+        row("Background server", `${intro} ${status}`, (setting) => {
+          buttons(setting);
+          setting.addExtraButton((b) => b.setIcon("refresh-cw").setTooltip("Check again").onClick(() => void this.refreshBackground()));
+        }),
+        row("Serve while Obsidian is closed", "On: an installed okf serve answers agents while Obsidian is closed. Off: it stays running but serves nothing. Takes effect the next time Obsidian closes.", (setting) =>
+          setting.addToggle((t) =>
+            t.setValue(s.headlessEnabled).onChange(async (v) => {
+              s.headlessEnabled = v;
+              await this.save();
+            }),
+          ),
+        ),
+        row("Allow agent writes while Obsidian is closed", "Off: the background server only reads. On: agents can write, but nothing sees you typing in another editor and new notes wait for your approval here. Takes effect the next time the background server takes over.", (setting) =>
+          setting.addToggle((t) =>
+            t.setValue(s.headlessWrites).onChange(async (v) => {
+              s.headlessWrites = v;
+              await this.save();
+            }),
+          ),
+        ),
+      ],
+    };
+  }
+
   private autoApproveGroup(): SettingDefinitionItem {
     const s = this.plugin.settings;
     const a = s.autoApprove;
@@ -291,45 +402,38 @@ export class OkfWikiSettingTab extends PluginSettingTab {
             }),
           ),
         ),
-        row("Tokens", "Comma-separated token names whose writes may be approved.", (setting) =>
-          commitOnChange(setting, a.tokens.join(", "), async (v) => {
-            const names = list(v);
-            const unknown = names.filter((n) => !s.tokens.some((t) => t.name === n));
-            if (unknown.length > 0) {
-              new Notice(`Not a token: ${unknown.join(", ")}`);
-              return false;
-            }
-            a.tokens = names;
-            await this.save();
-            return true;
-          }, "claude-code"),
-        ),
-        row("Bundles", "Comma-separated bundle folders. Empty means every bundle.", (setting) =>
-          commitOnChange(setting, a.bundles.join(", "), async (v) => {
-            const names = list(v);
-            const unknown = names.filter((n) => !s.bundles.some((b) => b.path === n));
-            if (unknown.length > 0) {
-              new Notice(`Not a bundle: ${unknown.join(", ")}`);
-              return false;
-            }
-            a.bundles = names;
-            await this.save();
-            return true;
-          }),
-        ),
+        ...(s.tokens.length === 0 ? [row("Tokens", "No tokens yet.")] : []),
+        ...s.tokens.map((t) => this.listToggle(`Token: ${t.name}`, "Approve this token's clean writes.", a.tokens, t.name)),
+        ...s.bundles.map((b) => this.listToggle(`Bundle: ${b.path}`, "Limit approval to the bundles you tick. None ticked means every bundle.", a.bundles, b.path)),
       ],
     };
   }
 
-  private async createToken(): Promise<void> {
+  /** A toggle for whether `value` is in `list`, saved at once. */
+  private listToggle(name: string, desc: string, list: string[], value: string): SettingDefinition {
+    return row(name, desc, (setting) =>
+      setting.addToggle((t) =>
+        t.setValue(list.includes(value)).onChange(async (on) => {
+          const i = list.indexOf(value);
+          if (on && i < 0) list.push(value);
+          if (!on && i >= 0) list.splice(i, 1);
+          await this.save();
+        }),
+      ),
+    );
+  }
+
+  /** True once the token exists; false (with a Notice) when the form needs fixing. */
+  private async createToken(): Promise<boolean> {
     const s = this.plugin.settings;
     const name = this.newToken.name;
     const errors = tokenNameErrors(name);
-    if (errors.length > 0) return void new Notice(`Token name: ${errors.join(" ")}`);
-    if (s.tokens.some((t) => t.name === name)) return void new Notice(`A token named '${name}' already exists.`);
+    const fail = (m: string) => (new Notice(m), false);
+    if (errors.length > 0) return fail(`Token name: ${errors.join(" ")}`);
+    if (s.tokens.some((t) => t.name === name)) return fail(`A token named '${name}' already exists.`);
     const bundles = list(this.newToken.bundles);
     const unknown = bundles.filter((b) => !s.bundles.some((x) => x.path === b));
-    if (unknown.length > 0) return void new Notice(`Not a bundle: ${unknown.join(", ")}`);
+    if (unknown.length > 0) return fail(`Not a bundle: ${unknown.join(", ")}`);
     const { token, record } = createTokenRecord({
       name,
       kind: this.newToken.process ? "process" : "agent",
@@ -341,6 +445,7 @@ export class OkfWikiSettingTab extends PluginSettingTab {
     this.newToken = blankToken();
     await this.save(!this.plugin.server);
     new TokenCreatedModal(this.app, name, token, s.port).open();
+    return true;
   }
 
   private advancedGroup(): SettingDefinitionItem {
@@ -385,6 +490,25 @@ class TokenCreatedModal extends Modal {
       }),
     );
     el.createEl("pre", { text, cls: "okf-wiki-snippet" });
+  }
+
+  override onClose(): void {
+    this.contentEl.empty();
+  }
+}
+
+class FormModal extends Modal {
+  constructor(
+    app: App,
+    private readonly title: string,
+    private readonly build: (el: HTMLElement, close: () => void) => void,
+  ) {
+    super(app);
+  }
+
+  override onOpen(): void {
+    this.setTitle(this.title);
+    this.build(this.contentEl, () => this.close());
   }
 
   override onClose(): void {

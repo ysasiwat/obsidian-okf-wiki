@@ -30,6 +30,8 @@ jobs:
       # Tests ran in CI on the tagged commit; the release re-checks lint and builds.
       - run: npm run lint
       - run: npm run build
+      # okf.cjs: the okf CLI, including `okf serve` for when Obsidian is closed.
+      - run: npm run build:cli && cp dist/okf.cjs okf.cjs
       # Attestations need a public repository (or GitHub Enterprise); the step turns on once it is public.
       - uses: actions/attest@v4
         if: ${{ !github.event.repository.private }}
@@ -38,9 +40,10 @@ jobs:
             main.js
             manifest.json
             styles.css
+            okf.cjs
       - name: Draft release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           tag="${GITHUB_REF#refs/tags/}"
-          gh release create "$tag" --title "$tag" --draft main.js manifest.json styles.css
+          gh release create "$tag" --title "$tag" --draft main.js manifest.json styles.css okf.cjs

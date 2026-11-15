@@ -26,6 +26,10 @@ export interface PluginSettings {
   stampHumanEdits: boolean;
   /** Approve clean writes of listed tokens as process:auto-approve (DESIGN.md §5.3). */
   autoApprove: AutoApproveSettings;
+  /** Let `okf serve` serve this vault while Obsidian is closed (ADR 0009). */
+  headlessEnabled: boolean;
+  /** Let `okf serve` offer write tools while Obsidian is closed (ADR 0009). */
+  headlessWrites: boolean;
 }
 
 export const DEFAULT_SETTINGS: PluginSettings = {
@@ -41,6 +45,8 @@ export const DEFAULT_SETTINGS: PluginSettings = {
   userId: "",
   stampHumanEdits: true,
   autoApprove: { enabled: false, tokens: [], bundles: [] },
+  headlessEnabled: true,
+  headlessWrites: false,
 };
 
 const isString = (v: unknown): v is string => typeof v === "string";
@@ -83,6 +89,8 @@ export function sanitizeSettings(raw: unknown): PluginSettings {
     userId: isString(o["userId"]) && USER_ID.test(o["userId"]) ? o["userId"] : "",
     stampHumanEdits: o["stampHumanEdits"] !== false,
     autoApprove: sanitizeAutoApprove(o["autoApprove"]),
+    headlessEnabled: o["headlessEnabled"] !== false,
+    headlessWrites: o["headlessWrites"] === true,
   };
 }
 

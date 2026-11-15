@@ -10,8 +10,8 @@ serves.
 
 ## Steps
 
-1. Open **Settings → OKF Wiki** and go to **New token**.
-2. Type a name for the agent in **New token name**, for example `claude-code`. Use lowercase
+1. Open **Settings → OKF Wiki** and go to **Access tokens** and select **Create token…**.
+2. Type a name for the agent in **Name**, for example `claude-code`. Use lowercase
    letters, digits, `.`, `_` or `-`.
 3. If the agent may write drafts, turn on **Scope: Write**. Leave it off for read only.
 4. Optional: limit the token to some bundles or folders; see

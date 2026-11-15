@@ -8,7 +8,7 @@ versions (**Settings → Community plugins**) and the full error.
 
 **Cause:** The server starts only once an access token exists.
 
-**Fix:** Create a token under **Settings → OKF Wiki → New token**. See
+**Fix:** Create a token under **Settings → OKF Wiki → Access tokens → Create token…**. See
 [Connect an agent](how-to/connect-an-agent.md).
 
 ## `OKF Wiki: Port 27150 is already in use.`

@@ -10,7 +10,7 @@ way; see [Connect an agent](how-to/connect-an-agent.md).
 2. Open **Settings → OKF Wiki**. Under **Bundles**, type `Knowledge` in **Add a folder** and select
    **Add**.
 
-3. Under **New token**, type `claude-code` in **New token name** and select **Create token**. Leave
+3. Under **Access tokens**, select **Create token…**, type `claude-code` in **Name** and select **Create token**. Leave
    the scopes off: this token can read only.
 
 4. In the dialog that opens, select **Copy** next to **Claude Code, this project folder (run it

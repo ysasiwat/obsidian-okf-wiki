@@ -97,7 +97,7 @@ Here's why:
 - You should decide which knowledge counts as reviewed, not the agent
 - Your notes stay plain Markdown that you can read and edit without the plugin
 
-Desktop only. Status: 0.7.0, early.
+Desktop only. Status: 0.8.0, early.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -144,9 +144,16 @@ Desktop only. Status: 0.7.0, early.
 - It reads and writes only inside your vault: the bundle folders you enable, and its own state
   (snapshots, audit log, trust snapshot) in its plugin folder. Files reached through symlinks that
   lead outside the vault are not served.
-- It imports Node's `fs` module for one thing only: resolving a file's real path (`realpath`), so
-  that a symlink inside a bundle cannot expose files outside the vault or in its configuration
-  folder. It reads and writes notes only through Obsidian's vault API.
+- It imports Node's `fs` module to resolve a file's real path (`realpath`), so that a symlink inside
+  a bundle cannot expose files outside the vault or in its configuration folder, and to keep the
+  hand-over files with the background server in its state folder. It reads and writes notes only
+  through Obsidian's vault API.
+- **Background server (optional, Windows, off until you install it).** When you press **Install**
+  in Settings → Background server, and only then, the plugin writes `okf.cjs` (the same server,
+  built into the plugin) to `.okf-wiki` in your user folder and runs it with your installed Node.js
+  to add a Task Scheduler task that starts it at logon. That server then answers agents while
+  Obsidian is closed, on the same port with the same tokens. **Start**, **Stop** and **Uninstall**
+  run the same program; Uninstall removes the task. The plugin starts no other processes.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -180,7 +187,7 @@ other MCP clients work the same way with the `.mcp.json` snippet.
    **Add a folder** and press **Add**.
 3. **Set your ID.** Under **Agent writes**, fill in **Your ID**, for example your name. You need it
    to approve notes, and it records your own edits.
-4. **Create a token.** Under **New token**, enter a name such as `claude-code`. Turn on
+4. **Create a token.** Under **Access tokens**, select **Create token…** and enter a name such as `claude-code`. Turn on
    **Scope: Write** if the agent may write drafts; leave it off for read only. Press
    **Create token**.
 5. **Copy a command.** A dialog shows the token once, with two **Claude Code** commands (one for
@@ -216,7 +223,7 @@ reference.
 1. In the plugin settings under **Bundles**, add a folder to serve. Any folder works; it becomes an
    OKF bundle (an `index.md`, a `log.md` and optionally a `.okf.yaml` policy). Folders that
    already look like OKF bundles are offered for you to enable.
-2. Under **New token**, create a token (see [Access tokens and scopes](#access-tokens-and-scopes)).
+2. Under **Access tokens**, select **Create token…** to create a token (see [Access tokens and scopes](#access-tokens-and-scopes)).
    New tokens can read; turn on **Scope: Write** to let agents write drafts.
 3. Copy a command shown for Claude Code (or the `.mcp.json` snippet for other clients). For this
    project folder only, run it in that folder:
@@ -237,9 +244,9 @@ Writing (Write scope): `okf_create`, `okf_update`, `okf_move`, `okf_deprecate`,
 
 ### Access tokens and scopes
 
-Give each agent its own token, created under **New token** in the settings:
+Give each agent its own token, created with **Create token…** under **Access tokens** in the settings:
 
-- **New token name** identifies the agent in logs, for example `claude-code`.
+- **Name** identifies the agent in logs, for example `claude-code`.
 - **Limit to bundles** and **Limit to paths** restrict the token to some bundle folders, or to some
   folders inside them (such as `concepts` and `decisions`). Empty means everything.
 - Every token can read. Extra scopes:

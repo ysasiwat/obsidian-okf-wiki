@@ -1,5 +1,6 @@
 // `okf`: lint OKF bundles and maintain their index.md files from the command line or CI,
-// using the same okf-core the Obsidian plugin uses.
+// using the same okf-core the Obsidian plugin uses; `okf serve` runs the plugin's MCP server
+// while Obsidian is closed (serve.ts).
 
 import { readdirSync, readFileSync, statSync, writeFileSync, existsSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
@@ -8,6 +9,7 @@ import { detectEol } from "../core/document";
 import { renderAllIndexes } from "../core/indexRender";
 import { countBySeverity, lintBundle, type Diagnostic, type Severity } from "../core/lint";
 import { POLICY_FILENAME } from "../core/policy";
+import { SERVE_USAGE, serveCommand } from "./serve";
 
 const USAGE = `Usage:
   okf lint <bundle-dir> [--json] [--strict] [--min-severity error|warning|info]
@@ -15,6 +17,7 @@ const USAGE = `Usage:
       (or on warnings with --strict).
   okf index <bundle-dir> [--check | --write]
       Regenerate index.md files. --check (default) exits 1 if any would change.
+  ${SERVE_USAGE.trimEnd().split("\n").join("\n  ")}
 `;
 
 /** Load a bundle directory: text for .md and the policy file, names for everything else. */
@@ -105,4 +108,8 @@ export function main(argv: string[]): number {
 }
 
 const invokedDirectly = process.argv[1] && /okf(\.[cm]?[jt]s)?$/.test(process.argv[1]);
-if (invokedDirectly) process.exitCode = main(process.argv.slice(2));
+if (invokedDirectly) {
+  const argv = process.argv.slice(2);
+  if (argv[0] === "serve") void serveCommand(argv.slice(1)).then((code) => (process.exitCode = code));
+  else process.exitCode = main(argv);
+}

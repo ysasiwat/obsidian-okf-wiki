@@ -48,19 +48,19 @@ If your vault's `.obsidian` folder is in git, add the plugin's `state` folder to
 | Setting | Default | Description |
 | ------- | ------- | ----------- |
 | Approve clean agent writes | off | Approve notes from the listed tokens that cite sources in footnotes, have no lint warnings and no review request, as `process:auto-approve`. |
-| Tokens | empty | Token names, separated by commas. |
-| Bundles | empty | Bundle folders, separated by commas. Empty means every bundle. |
+| Token: *name* | off | One toggle per token: approve that token's clean writes. |
+| Bundle: *folder* | off | One toggle per bundle: limit approval to the ticked bundles. None ticked means every bundle. |
 
 ### Access tokens
 
 Lists each token with its scopes, bundles, paths, creation date and last use, and a **Revoke**
 button. Only a SHA-256 hash of each token is stored.
 
-### New token
+### New token (Access tokens → Create token…)
 
 | Setting | Default | Description |
 | ------- | ------- | ----------- |
-| New token name | | Lowercase letters, digits, `.`, `_` or `-`, starting with a letter or digit, up to 64 characters. |
+| Name | | Lowercase letters, digits, `.`, `_` or `-`, starting with a letter or digit, up to 64 characters. |
 | Limit to bundles | empty | Bundle folders, separated by commas. Empty means all bundles. |
 | Limit to paths | empty | Folders inside the bundles, separated by commas. Empty means everything. |
 | Scope: Write | off | Create, update, move and deprecate concepts and ingest raw sources. New concepts are drafts. |
