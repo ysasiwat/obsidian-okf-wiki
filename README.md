@@ -93,7 +93,7 @@ Here's why:
 - You should decide which knowledge counts as reviewed, not the agent
 - Your notes stay plain Markdown that you can read and edit without the plugin
 
-Desktop only. Status: 0.8.1, early.
+Desktop only. Status: 0.8.2, early.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

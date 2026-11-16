@@ -62,6 +62,10 @@ export default class OkfWikiPlugin extends Plugin {
 
   override async onload(): Promise<void> {
     this.settings = sanitizeSettings(await this.loadData());
+    // Obsidian can unload a plugin while its async onload still awaits (turned off or updated
+    // mid-load). Anything registered after that is never cleaned up: an orphan instance keeps the
+    // view type, its intervals and the server lock, and the next enable fails (97_WIKI, 0.8.1).
+    if (this.unloaded) return;
     this.source = new VaultBundleSource(this.createVaultPort(), () => this.settings.bundles, {
       log: (m, e) => console.warn(LOG_PREFIX, m, e ?? ""),
       onUpdate: () => this.refreshViews(),
@@ -76,6 +80,7 @@ export default class OkfWikiPlugin extends Plugin {
       if (BackgroundServer.supported()) this.background = new BackgroundServer(this.vaultBase, this.app.vault.configDir);
       try {
         if (!(await adapter.exists(stateDir))) await adapter.mkdir(stateDir);
+        if (this.unloaded) return;
         const stateAbs = this.stateAbs;
         const claim = (): void => writeLock(stateAbs, this.manifest.version, this.lockId);
         claim();
@@ -185,6 +190,7 @@ export default class OkfWikiPlugin extends Plugin {
           new Notice("OKF Wiki: the background server did not hand over the vault in time, so agent writes are paused until Obsidian restarts.");
         }
       }
+      if (this.unloaded) return;
       await this.trust.load();
       await this.reloadBundles();
       // After a plugin update, give an installed background server the matching version.
