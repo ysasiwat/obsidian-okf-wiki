@@ -2,12 +2,10 @@
 
 
 
-<!-- PROJECT LOGO -->
 <br />
 <div align="center">
   <h3 align="center">OKF Wiki</h3>
 
-<!-- PROJECT SHIELDS — keep the blank lines around this block and no indent -->
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
@@ -28,7 +26,6 @@
 
 
 
-<!-- TABLE OF CONTENTS -->
 <details>
   <summary>Table of Contents</summary>
   <ol>
@@ -82,7 +79,6 @@ needs no programming. Building, testing, the `okf` CLI and the API for other plu
 
 
 
-<!-- ABOUT THE PROJECT -->
 ## About The Project
 
 OKF Wiki serves folders of your vault to AI agents over [MCP](https://modelcontextprotocol.io) as
@@ -97,7 +93,7 @@ Here's why:
 - You should decide which knowledge counts as reviewed, not the agent
 - Your notes stay plain Markdown that you can read and edit without the plugin
 
-Desktop only. Status: 0.8.0, early.
+Desktop only. Status: 0.8.1, early.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -159,7 +155,6 @@ Desktop only. Status: 0.8.0, early.
 
 
 
-<!-- GETTING STARTED -->
 ## Getting Started
 
 ### Prerequisites
@@ -212,7 +207,6 @@ Next, read [Organizing bundles](#organizing-bundles) before your bundle grows, a
 
 
 
-<!-- USAGE EXAMPLES -->
 ## Usage
 
 See the [user manual](docs/user-manual/index.md) for step-by-step guides, examples and the full
@@ -318,7 +312,6 @@ server**.
 
 
 
-<!-- CONFIGURATION -->
 ## Configuration
 
 Most settings live under **Settings → OKF Wiki** (see [Usage](#usage)). Rules for one bundle live
@@ -340,7 +333,6 @@ default.
 
 
 
-<!-- ROADMAP -->
 ## Roadmap
 
 - [x] Read-only MCP server with OKF lint and the `okf` CLI
@@ -355,7 +347,6 @@ list of proposed features (and known issues).
 
 
 
-<!-- SUPPORT -->
 ## Support
 
 Like this project? A coffee keeps it going — every cup funds issues, fixes, and
@@ -371,7 +362,6 @@ new features.
 
 
 
-<!-- BUILDING AND EXTENDING -->
 ## Building and Extending
 
 This part is for people who build the plugin, check bundles in CI, write plugins on top of OKF Wiki,
@@ -458,7 +448,6 @@ npm run bench         # UI-thread cost on large synthetic bundles
 
 
 
-<!-- LICENSE -->
 ## License
 
 Distributed under the Apache-2.0 License. See [LICENSE](LICENSE) for more information.
@@ -469,7 +458,6 @@ obsidian-local-rest-api (MIT) without using its code. See [NOTICE](NOTICE).
 
 
 
-<!-- ACKNOWLEDGMENTS -->
 ## Acknowledgments
 
 * [Open Knowledge Format](https://github.com/google/open-knowledge-format) for the bundle format and sample bundles
@@ -481,7 +469,6 @@ obsidian-local-rest-api (MIT) without using its code. See [NOTICE](NOTICE).
 
 
 
-<!-- MARKDOWN LINKS & IMAGES -->
 [contributors-shield]: https://img.shields.io/github/contributors/ysasiwat/obsidian-okf-wiki.svg?style=for-the-badge
 [contributors-url]: https://github.com/ysasiwat/obsidian-okf-wiki/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/ysasiwat/obsidian-okf-wiki.svg?style=for-the-badge

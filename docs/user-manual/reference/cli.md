@@ -81,13 +81,13 @@ It hands the port to the plugin when Obsidian opens the vault and takes it back 
 it. See [Serve agents while Obsidian is closed](../how-to/serve-while-obsidian-is-closed.md).
 
 ```text
-okf serve --vault <path> [--config-dir .obsidian] [--install | --uninstall | --start | --stop]
+okf serve --vault <path> [--config-dir <folder>] [--install | --uninstall | --start | --stop | --status]
 ```
 
 | Argument or option | Required | Default | Description |
 | ------------------ | -------- | ------- | ----------- |
 | `--vault <path>` | Yes | | The vault folder. |
-| `--config-dir <name>` | No | `.obsidian` | The vault's Obsidian configuration folder. |
+| `--config-dir <folder>` | No | found | The vault's Obsidian configuration folder. Without it, `okf serve` uses the one dot-folder in the vault that holds `plugins/okf-wiki`, and exits with `2` when there is none or more than one. |
 | `--install` | No | off | Windows only: copy this CLI to `%USERPROFILE%\.okf-wiki\` and register a Task Scheduler task that runs `okf serve` at logon with no window, then start it. |
 | `--uninstall` | No | off | Windows only: remove that task and stop the running server. |
 | `--start` | No | off | Windows only: run the installed task now. Exits with `1` when no task is installed for the vault. |

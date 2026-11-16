@@ -2,7 +2,7 @@
 // plugin holds state/server.lock, and hands the port over when one does.
 
 import { execFileSync } from "node:child_process";
-import { copyFileSync, existsSync, mkdirSync, readFileSync, renameSync, statSync, appendFileSync } from "node:fs";
+import { appendFileSync, copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, statSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 import { homedir } from "node:os";
 import { createHash } from "node:crypto";
@@ -40,7 +40,7 @@ interface Running {
   source: VaultBundleSource;
   trust: FileTrustLedger;
   writes: WriteService | undefined;
-  flush: NodeJS.Timeout;
+  flush: number;
 }
 
 export class Daemon {
@@ -68,7 +68,8 @@ export class Daemon {
   }
 
   log(message: string, error?: unknown): void {
-    const line = `${new Date().toISOString()} ${message}${error ? ` ${error instanceof Error ? error.message : String(error)}` : ""}`;
+    const detail = error === undefined || error === null ? "" : ` ${error instanceof Error ? error.message : typeof error === "string" ? error : JSON.stringify(error)}`;
+    const line = `${new Date().toISOString()} ${message}${detail}`;
     this.print(line);
     const file = join(this.stateAbs, "daemon.log");
     try {
@@ -155,7 +156,7 @@ export class Daemon {
     const adapter = nodeStateAdapter(this.vault);
     const source = new VaultBundleSource(nodeVaultPort(this.vault), () => settings.bundles, { log: (m, e) => this.log(m, e) });
     const trust = new FileTrustLedger(adapter, this.stateRel);
-    const flush = setInterval(() => void trust.flush(), 5_000);
+    const flush = window.setInterval(() => void trust.flush(), 5_000);
     let server: OkfHttpServer | undefined;
     try {
       await source.reload();
@@ -189,7 +190,7 @@ export class Daemon {
       await server.start(settings.port);
       this.running = { server, source, trust, writes, flush };
     } catch (e) {
-      clearInterval(flush);
+      window.clearInterval(flush);
       source.dispose();
       await server?.stop();
       throw e;
@@ -203,15 +204,16 @@ export class Daemon {
     this.running = null;
     await r.server.stop();
     await r.writes?.idle();
-    clearInterval(r.flush);
+    window.clearInterval(r.flush);
     await r.trust.flush();
     r.source.dispose();
   }
 }
 
-export const SERVE_USAGE = `okf serve --vault <path> [--config-dir .obsidian]
+export const SERVE_USAGE = `okf serve --vault <path> [--config-dir <folder>]
     Serve the vault's OKF Wiki MCP server while Obsidian is closed, using the plugin's settings.
-okf serve --install --vault <path> [--config-dir .obsidian]
+    Without --config-dir, the vault's one dot-folder that holds plugins/okf-wiki is used.
+okf serve --install --vault <path> [--config-dir <folder>]
     Windows: copy this CLI to %USERPROFILE%\\.okf-wiki and run it at logon (Task Scheduler).
 okf serve --uninstall --vault <path>
     Windows: remove that logon task and stop the server.
@@ -234,11 +236,13 @@ export async function serveCommand(argv: string[]): Promise<number> {
     process[vaultArg ? "stdout" : "stderr"].write(SERVE_USAGE);
     return vaultArg ? 0 : 2;
   }
-  const options: ServeOptions = { vault: resolve(vaultArg), configDir: arg(argv, "--config-dir") ?? ".obsidian" };
-  if (!existsSync(join(options.vault, options.configDir))) {
-    process.stderr.write(`not an Obsidian vault (no ${options.configDir} folder): ${options.vault}\n`);
+  const vault = resolve(vaultArg);
+  const configDir = arg(argv, "--config-dir") ?? findConfigDir(vault);
+  if (!configDir || !existsSync(join(vault, configDir))) {
+    process.stderr.write(`no Obsidian configuration folder with the OKF Wiki plugin in ${vault}; pass --config-dir <folder>\n`);
     return 2;
   }
+  const options: ServeOptions = { vault, configDir };
   try {
     if (argv.includes("--install")) return install(options);
     if (argv.includes("--uninstall")) return await uninstall(options);
@@ -253,8 +257,8 @@ export async function serveCommand(argv: string[]): Promise<number> {
 }
 
 async function runDaemon(options: ServeOptions): Promise<number> {
-  // Shared plugin code calls window.setTimeout (popout-window safe in Obsidian).
-  (globalThis as { window?: unknown }).window ??= globalThis;
+  // Shared plugin code calls window.setTimeout (popout-window safe in Obsidian); the Node builds
+  // define window as globalThis (esbuild.config.mjs, package.json build:cli).
   const daemon = new Daemon(options);
   let pipe;
   try {
@@ -264,11 +268,11 @@ async function runDaemon(options: ServeOptions): Promise<number> {
     return 1;
   }
   daemon.log(`okf serve ${VERSION} started for ${options.vault}`);
-  const timer = setInterval(() => void daemon.tick().catch((e) => daemon.log("error", e)), POLL_MS);
+  const timer = window.setInterval(() => void daemon.tick().catch((e) => daemon.log("error", e)), POLL_MS);
   await daemon.tick();
   return new Promise((done) => {
     const stop = () => {
-      clearInterval(timer);
+      window.clearInterval(timer);
       void daemon.release().finally(() => {
         writeDaemon(daemon.stateAbs, { version: VERSION, state: "idle", writes: false, error: "stopped" });
         daemon.log("stopped");
@@ -279,6 +283,21 @@ async function runDaemon(options: ServeOptions): Promise<number> {
     process.once("SIGINT", stop);
     process.once("SIGTERM", stop);
   });
+}
+
+/**
+ * The vault's configuration folder. Obsidian lets each vault name its own, so take the one
+ * dot-folder that holds this plugin; null when there is none or more than one.
+ */
+export function findConfigDir(vault: string): string | null {
+  try {
+    const names = readdirSync(vault, { withFileTypes: true })
+      .filter((e) => e.isDirectory() && e.name.startsWith(".") && existsSync(join(vault, e.name, "plugins", PLUGIN_ID)))
+      .map((e) => e.name);
+    return names.length === 1 ? names[0]! : null;
+  } catch {
+    return null;
+  }
 }
 
 /** One task per vault, so two vaults can each have a daemon. */

@@ -123,7 +123,7 @@ export async function waitForRelease(
   stateDir: string,
   vaultBase: string,
   timeoutMs = RELEASE_TIMEOUT_MS,
-  sleep: (ms: number) => Promise<void> = (ms) => new Promise((r) => setTimeout(r, ms)),
+  sleep: (ms: number) => Promise<void> = (ms) => new Promise((r) => window.setTimeout(r, ms)),
 ): Promise<"none" | "released" | "timeout"> {
   if (readDaemon(stateDir)?.state !== "serving" || !(await daemonRunning(vaultBase))) return "none";
   for (let waited = 0; waited < timeoutMs; waited += 200) {

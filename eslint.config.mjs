@@ -4,7 +4,7 @@ import { defineConfig } from "eslint/config";
 import obsidianmd from "eslint-plugin-obsidianmd";
 
 export default defineConfig([
-  { ignores: ["main.js", "dist/**", "coverage/**", "node_modules/**", "test/**", "eval/**", "spikes/**", "scripts/**", "src/cli/**", "*.config.*", "esbuild.config.mjs"] },
+  { ignores: ["main.js", "dist/**", "coverage/**", "node_modules/**", "test/**", "eval/**", "spikes/**", "scripts/**", "*.config.*", "esbuild.config.mjs"] },
   ...obsidianmd.configs.recommended,
   {
     languageOptions: {

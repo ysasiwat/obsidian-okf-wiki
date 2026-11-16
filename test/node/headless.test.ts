@@ -2,7 +2,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { Daemon } from "../../src/cli/serve";
+import { Daemon, findConfigDir } from "../../src/cli/serve";
 import { etagOf } from "../../src/core/write";
 import { LOCK_FILE, LOCK_STALE_MS, lockHeld, readDaemon, removeLock, writeLock } from "../../src/node/handoff";
 import { NodeFilePort, NodeVault, nodeVaultPort } from "../../src/node/ports";
@@ -27,12 +27,12 @@ describe("Node ports", () => {
     const v = tempVault();
     mkdirSync(join(v, ".trash"));
     writeFileSync(join(v, ".trash", "x.md"), "x");
-    expect(nodeVaultPort(new NodeVault(v)).listFiles().sort()).toEqual(["kb/a.md"]);
+    expect(nodeVaultPort(new NodeVault(v, ".obsidian")).listFiles().sort()).toEqual(["kb/a.md"]);
   });
 
   it("writes against the etag and refuses stale or clashing writes", async () => {
     const v = tempVault();
-    const port = new NodeFilePort(new NodeVault(v));
+    const port = new NodeFilePort(new NodeVault(v, ".obsidian"));
     const text = (await port.read("kb", "a.md"))!;
     await port.write("kb", "a.md", "B\n", etagOf(text));
     expect(readFileSync(join(v, "kb", "a.md"), "utf8")).toBe("B\n");
@@ -44,7 +44,7 @@ describe("Node ports", () => {
 
   it("moves deleted files to the vault's .trash", async () => {
     const v = tempVault();
-    await new NodeFilePort(new NodeVault(v)).trash("kb", "a.md");
+    await new NodeFilePort(new NodeVault(v, ".obsidian")).trash("kb", "a.md");
     expect(existsSync(join(v, "kb", "a.md"))).toBe(false);
     expect(existsSync(join(v, ".trash", "a.md"))).toBe(true);
   });
@@ -106,5 +106,16 @@ describe("Daemon", () => {
     await daemon.tick();
     expect(daemon.serving).toBe(false);
     expect(readDaemon(daemon.stateAbs)?.error).toMatch(/no tokens/);
+  });
+});
+
+describe("findConfigDir", () => {
+  it("finds the one dot-folder that holds the plugin, else null", () => {
+    const v = tempVault();
+    expect(findConfigDir(v)).toBe(".obsidian");
+    mkdirSync(join(v, ".config2", "plugins", "okf-wiki"), { recursive: true });
+    expect(findConfigDir(v)).toBeNull();
+    rmSync(join(v, ".obsidian"), { recursive: true });
+    expect(findConfigDir(v)).toBe(".config2");
   });
 });

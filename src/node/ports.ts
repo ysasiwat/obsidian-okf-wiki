@@ -16,7 +16,7 @@ const hidden = (vaultPath: string): boolean => vaultPath.split("/").some((s) => 
 export class NodeVault {
   readonly guard: (vaultPath: string) => boolean;
 
-  constructor(readonly base: string, readonly configDir = ".obsidian") {
+  constructor(readonly base: string, readonly configDir: string) {
     this.guard = createDiskGuard(base, configDir);
   }
 

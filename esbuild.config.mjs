@@ -46,6 +46,8 @@ const daemon = await esbuild.build({
   minify: true,
   write: false,
   alias: options.alias,
+  // Shared plugin code calls window.setTimeout; in Node, window is the global object.
+  define: { window: "globalThis" },
   banner: { js: "#!/usr/bin/env node" },
   logLevel: "warning",
 });

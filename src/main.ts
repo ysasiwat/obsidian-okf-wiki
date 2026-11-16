@@ -182,7 +182,7 @@ export default class OkfWikiPlugin extends Plugin {
         const handoff = await waitForRelease(this.stateAbs, this.vaultBase, undefined, (ms) => new Promise((r) => window.setTimeout(r, ms)));
         if (handoff === "timeout") {
           this.handoffPaused = true;
-          new Notice("OKF Wiki: the background server (okf serve) did not hand over the vault in time, so agent writes are paused until Obsidian restarts.");
+          new Notice("OKF Wiki: the background server did not hand over the vault in time, so agent writes are paused until Obsidian restarts.");
         }
       }
       await this.trust.load();
